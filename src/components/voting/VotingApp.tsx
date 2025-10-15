@@ -42,7 +42,7 @@ export default function VotingApp() {
         console.log('🌐 Backend results:', results);
         
         // Check if device reset occurred and clear local storage if needed
-        const wasReset = checkAndHandleDeviceReset(voteStatus.lastDeviceResetTimestamp);
+        const wasReset = checkAndHandleDeviceReset(voteStatus?.lastDeviceResetTimestamp || null);
         console.log('🔄 Was reset detected?', wasReset);
         
         // If reset occurred, start with completely fresh state

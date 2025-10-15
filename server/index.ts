@@ -36,6 +36,7 @@ interface VoteResults {
 
 let votes: Vote[] = [];
 let userVotes: Set<string> = new Set(); // Track users who have voted (by IP or session)
+let lastDeviceResetTimestamp: string | null = null; // Track when device IDs were last reset
 
 // Team mapping
 const TEAM_NAMES = {
@@ -66,12 +67,12 @@ const calculateResults = (): VoteResults => {
 // Routes
 
 // Health check
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (req: Request, res: Response) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
 // Get current vote results
-app.get('/api/results', (req, res) => {
+app.get('/api/results', (req: Request, res: Response) => {
   const results = calculateResults();
   const totalVotes = votes.length;
   
@@ -90,18 +91,19 @@ app.get('/api/results', (req, res) => {
 });
 
 // Check if user has voted
-app.get('/api/vote-status/:identifier', (req, res) => {
+app.get('/api/vote-status/:identifier', (req: Request, res: Response) => {
   const { identifier } = req.params;
   const hasVoted = userVotes.has(identifier);
   
   res.json({
     hasVoted,
     identifier,
+    lastDeviceResetTimestamp,
   });
 });
 
 // Submit a vote
-app.post('/api/vote', (req, res) => {
+app.post('/api/vote', (req: Request, res: Response) => {
   try {
     const { userTeam, votedFor, userIdentifier } = req.body;
     const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
@@ -177,7 +179,7 @@ app.post('/api/vote', (req, res) => {
 });
 
 // Get all votes (admin endpoint)
-app.get('/api/admin/votes', (req, res) => {
+app.get('/api/admin/votes', (req: Request, res: Response) => {
   const formattedVotes = votes.map(vote => ({
     id: vote.id,
     userTeam: TEAM_NAMES[vote.userTeam as keyof typeof TEAM_NAMES],
@@ -193,7 +195,7 @@ app.get('/api/admin/votes', (req, res) => {
 });
 
 // Reset votes (admin endpoint - use with caution)
-app.post('/api/admin/reset', (req, res) => {
+app.post('/api/admin/reset', (req: Request, res: Response) => {
   const { confirm } = req.body;
   
   if (confirm !== 'RESET_ALL_VOTES') {
@@ -215,7 +217,7 @@ app.post('/api/admin/reset', (req, res) => {
 });
 
 // Reset all device IP IDs (admin endpoint - allows all users to vote again)
-app.post('/api/admin/reset-devices', (req, res) => {
+app.post('/api/admin/reset-devices', (req: Request, res: Response) => {
   const { confirm } = req.body;
   
   if (confirm !== 'RESET_ALL_DEVICES') {
@@ -226,19 +228,23 @@ app.post('/api/admin/reset-devices', (req, res) => {
 
   const previousVoterCount = userVotes.size;
   userVotes.clear();
+  
+  // Update reset timestamp so frontend can detect the reset
+  lastDeviceResetTimestamp = new Date().toISOString();
 
-  console.log(`🔄 All device IDs have been reset. ${previousVoterCount} users can now vote again.`);
+  console.log(`🔄 All device IDs have been reset. ${previousVoterCount} users can now vote again and select teams again.`);
 
   res.json({
     success: true,
-    message: `All device IDs have been reset. ${previousVoterCount} users can now vote again.`,
+    message: `All device IDs have been reset. ${previousVoterCount} users can now vote again and select teams again.`,
     previousVoterCount,
+    resetTimestamp: lastDeviceResetTimestamp,
     timestamp: new Date().toISOString(),
   });
 });
 
 // Get device/voter statistics (admin endpoint)
-app.get('/api/admin/devices', (req, res) => {
+app.get('/api/admin/devices', (req: Request, res: Response) => {
   res.json({
     totalUniqueDevices: userVotes.size,
     totalVotes: votes.length,
@@ -257,7 +263,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 });
 
 // 404 handler
-app.use('*', (req, res) => {
+app.use('*', (req: Request, res: Response) => {
   res.status(404).json({
     error: 'Endpoint not found',
     path: req.originalUrl,
