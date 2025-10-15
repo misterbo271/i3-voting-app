@@ -1,0 +1,443 @@
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.utils import timezone
+import json
+import logging
+
+from .models import Vote, VoteResults, SystemLog
+from .services import VotingAPIService, VotingDataService
+
+logger = logging.getLogger(__name__)
+
+
+def get_client_ip(request):
+    """Get client IP address from request"""
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+
+class DashboardView(View):
+    """Main dashboard view showing voting statistics and overview"""
+    
+    def get(self, request):
+        try:
+            data_service = VotingDataService()
+            stats = data_service.get_dashboard_stats()
+            
+            # Get recent votes
+            recent_votes = Vote.objects.select_related().order_by('-timestamp')[:10]
+            
+            # Get recent logs
+            recent_logs = SystemLog.objects.order_by('-timestamp')[:10]
+            
+            # Get team performance data for charts
+            team_performance = []
+            for result in stats.get('results', []):
+                team_performance.append({
+                    'name': result['teamName'],
+                    'votes': result['votes'],
+                    'percentage': result['percentage']
+                })
+            
+            context = {
+                'stats': stats,
+                'recent_votes': recent_votes,
+                'recent_logs': recent_logs,
+                'team_performance': team_performance,
+                'page_title': 'Dashboard'
+            }
+            
+            return render(request, 'management/dashboard.html', context)
+            
+        except Exception as e:
+            logger.error(f"Dashboard error: {str(e)}")
+            messages.error(request, f"Error loading dashboard: {str(e)}")
+            
+            # Fallback context
+            context = {
+                'stats': {'total_votes': 0, 'unique_voters': 0, 'backend_connected': False},
+                'recent_votes': [],
+                'recent_logs': [],
+                'team_performance': [],
+                'page_title': 'Dashboard'
+            }
+            return render(request, 'management/dashboard.html', context)
+
+
+class VotesListView(View):
+    """View to list and manage all votes"""
+    
+    def get(self, request):
+        try:
+            # Get query parameters
+            search = request.GET.get('search', '')
+            team_filter = request.GET.get('team', '')
+            page = request.GET.get('page', 1)
+            
+            # Build queryset
+            votes = Vote.objects.all()
+            
+            if search:
+                votes = votes.filter(
+                    Q(user_identifier__icontains=search) |
+                    Q(vote_id__icontains=search) |
+                    Q(ip_address__icontains=search)
+                )
+            
+            if team_filter:
+                votes = votes.filter(user_team=team_filter)
+            
+            votes = votes.order_by('-timestamp')
+            
+            # Pagination
+            paginator = Paginator(votes, 25)
+            votes_page = paginator.get_page(page)
+            
+            # Team choices for filter
+            team_choices = Vote.TEAM_CHOICES
+            
+            context = {
+                'votes': votes_page,
+                'search': search,
+                'team_filter': team_filter,
+                'team_choices': team_choices,
+                'page_title': 'All Votes'
+            }
+            
+            return render(request, 'management/votes_list.html', context)
+            
+        except Exception as e:
+            logger.error(f"Votes list error: {str(e)}")
+            messages.error(request, f"Error loading votes: {str(e)}")
+            return render(request, 'management/votes_list.html', {'votes': [], 'page_title': 'All Votes'})
+
+
+class ResultsView(View):
+    """View to display voting results and analytics"""
+    
+    def get(self, request):
+        try:
+            data_service = VotingDataService()
+            stats = data_service.get_dashboard_stats()
+            
+            # Get detailed results
+            results = VoteResults.objects.all().order_by('-vote_count')
+            
+            # Calculate additional analytics
+            analytics = {
+                'total_votes': stats.get('total_votes', 0),
+                'unique_voters': stats.get('unique_voters', 0),
+                'backend_connected': stats.get('backend_connected', False),
+                'last_updated': stats.get('last_updated'),
+            }
+            
+            # Prepare chart data
+            chart_data = {
+                'labels': [result.team_name for result in results],
+                'votes': [result.vote_count for result in results],
+                'percentages': [result.percentage for result in results]
+            }
+            
+            context = {
+                'results': results,
+                'analytics': analytics,
+                'chart_data': chart_data,
+                'page_title': 'Voting Results'
+            }
+            
+            return render(request, 'management/results.html', context)
+            
+        except Exception as e:
+            logger.error(f"Results view error: {str(e)}")
+            messages.error(request, f"Error loading results: {str(e)}")
+            return render(request, 'management/results.html', {'results': [], 'page_title': 'Voting Results'})
+
+
+class SystemLogsView(View):
+    """View to display system logs and activities"""
+    
+    def get(self, request):
+        try:
+            # Get query parameters
+            level_filter = request.GET.get('level', '')
+            action_filter = request.GET.get('action', '')
+            search = request.GET.get('search', '')
+            page = request.GET.get('page', 1)
+            
+            # Build queryset
+            logs = SystemLog.objects.all()
+            
+            if level_filter:
+                logs = logs.filter(level=level_filter)
+            
+            if action_filter:
+                logs = logs.filter(action_type=action_filter)
+            
+            if search:
+                logs = logs.filter(
+                    Q(message__icontains=search) |
+                    Q(user__icontains=search)
+                )
+            
+            logs = logs.order_by('-timestamp')
+            
+            # Pagination
+            paginator = Paginator(logs, 50)
+            logs_page = paginator.get_page(page)
+            
+            # Filter choices
+            level_choices = SystemLog.LOG_LEVELS
+            action_choices = SystemLog.ACTION_TYPES
+            
+            context = {
+                'logs': logs_page,
+                'level_filter': level_filter,
+                'action_filter': action_filter,
+                'search': search,
+                'level_choices': level_choices,
+                'action_choices': action_choices,
+                'page_title': 'System Logs'
+            }
+            
+            return render(request, 'management/system_logs.html', context)
+            
+        except Exception as e:
+            logger.error(f"System logs error: {str(e)}")
+            messages.error(request, f"Error loading logs: {str(e)}")
+            return render(request, 'management/system_logs.html', {'logs': [], 'page_title': 'System Logs'})
+
+
+class AdminActionsView(View):
+    """View for administrative actions"""
+    
+    def get(self, request):
+        try:
+            api_service = VotingAPIService()
+            
+            # Check backend health
+            try:
+                health = api_service.health_check()
+                backend_status = 'healthy'
+                backend_info = health
+            except Exception as e:
+                backend_status = 'error'
+                backend_info = {'error': str(e)}
+            
+            context = {
+                'backend_status': backend_status,
+                'backend_info': backend_info,
+                'page_title': 'Admin Actions'
+            }
+            
+            return render(request, 'management/admin_actions.html', context)
+            
+        except Exception as e:
+            logger.error(f"Admin actions error: {str(e)}")
+            messages.error(request, f"Error loading admin panel: {str(e)}")
+            return render(request, 'management/admin_actions.html', {'page_title': 'Admin Actions'})
+
+
+# AJAX/API Views
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def sync_votes_ajax(request):
+    """AJAX endpoint to sync votes from backend"""
+    try:
+        data_service = VotingDataService()
+        user = request.user.username if request.user.is_authenticated else 'anonymous'
+        ip_address = get_client_ip(request)
+        
+        synced_count = data_service.sync_votes_from_backend(user=user, ip_address=ip_address)
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Successfully synced {synced_count} votes from backend',
+            'synced_count': synced_count
+        })
+        
+    except Exception as e:
+        logger.error(f"Sync votes AJAX error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def sync_results_ajax(request):
+    """AJAX endpoint to sync results from backend"""
+    try:
+        data_service = VotingDataService()
+        user = request.user.username if request.user.is_authenticated else 'anonymous'
+        ip_address = get_client_ip(request)
+        
+        synced_count = data_service.sync_results_from_backend(user=user, ip_address=ip_address)
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Successfully synced results for {synced_count} teams',
+            'synced_count': synced_count
+        })
+        
+    except Exception as e:
+        logger.error(f"Sync results AJAX error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def reset_votes_ajax(request):
+    """AJAX endpoint to reset all votes"""
+    try:
+        data = json.loads(request.body)
+        confirm = data.get('confirm', False)
+        
+        if not confirm:
+            return JsonResponse({
+                'success': False,
+                'error': 'Confirmation required'
+            }, status=400)
+        
+        data_service = VotingDataService()
+        user = request.user.username if request.user.is_authenticated else 'anonymous'
+        ip_address = get_client_ip(request)
+        
+        success = data_service.reset_all_data(user=user, ip_address=ip_address)
+        
+        if success:
+            return JsonResponse({
+                'success': True,
+                'message': 'All voting data has been reset successfully'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Failed to reset voting data'
+            }, status=500)
+        
+    except Exception as e:
+        logger.error(f"Reset votes AJAX error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@require_http_methods(["GET"])
+def health_check_ajax(request):
+    """AJAX endpoint to check backend health"""
+    try:
+        api_service = VotingAPIService()
+        health = api_service.health_check()
+        
+        return JsonResponse({
+            'success': True,
+            'health': health,
+            'backend_connected': True
+        })
+        
+    except Exception as e:
+        logger.error(f"Health check AJAX error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e),
+            'backend_connected': False
+        }, status=500)
+
+
+@require_http_methods(["GET"])
+def dashboard_stats_ajax(request):
+    """AJAX endpoint to get dashboard statistics"""
+    try:
+        data_service = VotingDataService()
+        stats = data_service.get_dashboard_stats()
+        
+        return JsonResponse({
+            'success': True,
+            'stats': stats
+        })
+        
+    except Exception as e:
+        logger.error(f"Dashboard stats AJAX error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def reset_devices_ajax(request):
+    """AJAX endpoint to reset all device IDs"""
+    try:
+        data = json.loads(request.body)
+        confirm = data.get('confirm', False)
+        
+        if not confirm:
+            return JsonResponse({
+                'success': False,
+                'error': 'Confirmation required'
+            }, status=400)
+        
+        data_service = VotingDataService()
+        user = request.user.username if request.user.is_authenticated else 'anonymous'
+        ip_address = get_client_ip(request)
+        
+        success = data_service.reset_device_ids(user=user, ip_address=ip_address)
+        
+        if success:
+            return JsonResponse({
+                'success': True,
+                'message': 'All device IDs have been reset successfully. All users can now vote again.'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Failed to reset device IDs'
+            }, status=500)
+        
+    except Exception as e:
+        logger.error(f"Reset devices AJAX error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@require_http_methods(["GET"])
+def device_stats_ajax(request):
+    """AJAX endpoint to get device statistics"""
+    try:
+        data_service = VotingDataService()
+        user = request.user.username if request.user.is_authenticated else 'anonymous'
+        ip_address = get_client_ip(request)
+        
+        stats = data_service.get_device_statistics(user=user, ip_address=ip_address)
+        
+        return JsonResponse({
+            'success': True,
+            'stats': stats
+        })
+        
+    except Exception as e:
+        logger.error(f"Device stats AJAX error: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)

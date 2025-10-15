@@ -12,8 +12,8 @@ import { siteConfig } from '@/constant/config';
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
-    default: 'Beautiful Vase Contest - Company Voting',
-    template: `%s | Beautiful Vase Contest`,
+    default: 'i3 Women Day',
+    template: `%s | i3 Women Day`,
   },
   description: 'Vote for the team with the most beautiful vase in our company contest',
   robots: { index: true, follow: true },

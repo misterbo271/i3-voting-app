@@ -1,0 +1,379 @@
+{% extends 'management/base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block page_icon %}<i class="fas fa-tachometer-alt me-2"></i>{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group" role="group">
+    <button type="button" class="btn btn-outline-primary btn-sm" onclick="refreshDashboard()">
+        <i class="fas fa-sync-alt me-1"></i>Refresh
+    </button>
+    <button type="button" class="btn btn-outline-success btn-sm" onclick="syncData()">
+        <i class="fas fa-download me-1"></i>Sync Data
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total Votes
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="total-votes">
+                            {{ stats.total_votes|default:0 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-vote-yea fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Unique Voters
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="unique-voters">
+                            {{ stats.unique_voters|default:0 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Backend Status
+                        </div>
+                        <div class="h6 mb-0 font-weight-bold" id="backend-connection">
+                            {% if stats.backend_connected %}
+                                <span class="text-success">
+                                    <i class="fas fa-check-circle me-1"></i>Connected
+                                </span>
+                            {% else %}
+                                <span class="text-danger">
+                                    <i class="fas fa-times-circle me-1"></i>Disconnected
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-server fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Last Updated
+                        </div>
+                        <div class="h6 mb-0 font-weight-bold text-gray-800" id="last-updated">
+                            {% if stats.last_updated %}
+                                {{ stats.last_updated|timesince }} ago
+                            {% else %}
+                                Never
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-clock fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <!-- Voting Results Chart -->
+    <div class="col-xl-8 col-lg-7">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-chart-bar me-2"></i>Voting Results
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-area">
+                    <canvas id="votingChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Performance -->
+    <div class="col-xl-4 col-lg-5">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-trophy me-2"></i>Team Rankings
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="team-rankings">
+                    {% for team in team_performance %}
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="me-3">
+                                <div class="icon-circle bg-primary">
+                                    <i class="fas fa-users text-white"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="small text-gray-500">{{ team.name }}</div>
+                                <div class="font-weight-bold">{{ team.votes }} votes ({{ team.percentage }}%)</div>
+                                <div class="progress progress-sm">
+                                    <div class="progress-bar bg-primary" role="progressbar" 
+                                         style="width: {{ team.percentage }}%" 
+                                         aria-valuenow="{{ team.percentage }}" 
+                                         aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <p>No voting data available</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity Row -->
+<div class="row">
+    <!-- Recent Votes -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-list me-2"></i>Recent Votes
+                </h6>
+                <a href="{% url 'management:votes_list' %}" class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_votes %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Team</th>
+                                    <th>Voted For</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for vote in recent_votes %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-info">{{ vote.team_display_name }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success">{{ vote.voted_for_display_name }}</span>
+                                        </td>
+                                        <td class="text-muted small">{{ vote.timestamp|timesince }} ago</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted">
+                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <p>No recent votes</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- System Logs -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-file-alt me-2"></i>Recent Activity
+                </h6>
+                <a href="{% url 'management:system_logs' %}" class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_logs %}
+                    {% for log in recent_logs %}
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="me-2">
+                                {% if log.level == 'ERROR' %}
+                                    <i class="fas fa-exclamation-circle text-danger"></i>
+                                {% elif log.level == 'WARNING' %}
+                                    <i class="fas fa-exclamation-triangle text-warning"></i>
+                                {% elif log.level == 'SUCCESS' %}
+                                    <i class="fas fa-check-circle text-success"></i>
+                                {% else %}
+                                    <i class="fas fa-info-circle text-info"></i>
+                                {% endif %}
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="small">{{ log.message|truncatechars:60 }}</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">
+                                    {{ log.timestamp|timesince }} ago
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted">
+                        <i class="fas fa-inbox fa-2x mb-2"></i>
+                        <p>No recent activity</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Chart.js configuration for voting results
+const chartData = {{ team_performance|safe }};
+
+if (chartData && chartData.length > 0) {
+    const ctx = document.getElementById('votingChart').getContext('2d');
+    const votingChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: chartData.map(team => team.name),
+            datasets: [{
+                label: 'Votes',
+                data: chartData.map(team => team.votes),
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(255, 205, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(255, 205, 86, 1)',
+                    'rgba(75, 192, 192, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
+// Dashboard functions
+function refreshDashboard() {
+    location.reload();
+}
+
+function syncData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Syncing...';
+    btn.disabled = true;
+    
+    Promise.all([
+        fetch('{% url "management:sync_votes_ajax" %}', { method: 'POST' }),
+        fetch('{% url "management:sync_results_ajax" %}', { method: 'POST' })
+    ])
+    .then(responses => Promise.all(responses.map(r => r.json())))
+    .then(results => {
+        let success = true;
+        let messages = [];
+        
+        results.forEach(result => {
+            if (result.success) {
+                messages.push(result.message);
+            } else {
+                success = false;
+                messages.push(result.error || 'Sync failed');
+            }
+        });
+        
+        if (success) {
+            showAlert('success', 'Data synced successfully: ' + messages.join(', '));
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showAlert('danger', 'Sync failed: ' + messages.join(', '));
+        }
+    })
+    .catch(error => {
+        showAlert('danger', 'Sync failed: ' + error.message);
+    })
+    .finally(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container-fluid');
+    const firstRow = container.querySelector('.row');
+    container.insertBefore(alertDiv, firstRow);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+</script>
+{% endblock %}

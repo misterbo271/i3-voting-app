@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import React from 'react';
+import Image from 'next/image';
 
 import { Team, TEAMS } from '@/lib/voting';
 
@@ -18,12 +19,23 @@ export default function TeamSelector({ onSelectTeam }: TeamSelectorProps) {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="text-6xl mb-4">🏺</div>
+          <div className="mb-2 flex justify-center">
+            <Image 
+              src="/images/vase.png" 
+              alt="Vase" 
+              width={136} 
+              height={136}
+              className="object-contain"
+            />
+          </div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Beautiful Vase Contest
+            Bình chọn bình hoa
+          </h1>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            đẹp nhất
           </h1>
           <p className="text-gray-600">
-            Which team do you belong to?
+            Bạn thuộc team nào?
           </p>
         </motion.div>
 
@@ -53,7 +65,24 @@ export default function TeamSelector({ onSelectTeam }: TeamSelectorProps) {
           transition={{ delay: 0.5 }}
           className="mt-8 text-center text-sm text-gray-500"
         >
-          Select your team to continue voting
+          Chọn đội của bạn để tiếp tục vote
+        </motion.div>
+
+        {/* Footer with i3 Logo */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          className="fixed bottom-4 left-4 flex items-center space-x-2 opacity-60"
+        >
+          <Image 
+            src="/images/i3_logo.png" 
+            alt="i3 International" 
+            width={32} 
+            height={32}
+            className="object-contain"
+          />
+          <span className="text-xs text-gray-400">Powered by i3 International</span>
         </motion.div>
       </div>
     </div>

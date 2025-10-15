@@ -28,6 +28,7 @@ app.use(express.json());
 // In-memory storage
 let votes = [];
 let userVotes = new Set(); // Track users who have voted
+let lastDeviceResetTimestamp = null; // Track when device IDs were last reset
 
 // Team mapping
 const TEAM_NAMES = {
@@ -89,6 +90,7 @@ app.get('/api/vote-status/:identifier', (req, res) => {
   res.json({
     hasVoted,
     identifier,
+    lastDeviceResetTimestamp,
   });
 });
 
@@ -206,6 +208,43 @@ app.post('/api/admin/reset', (req, res) => {
   });
 });
 
+// Reset all device IP IDs (admin endpoint - allows all users to vote again)
+app.post('/api/admin/reset-devices', (req, res) => {
+  const { confirm } = req.body;
+  
+  if (confirm !== 'RESET_ALL_DEVICES') {
+    return res.status(400).json({
+      error: 'Must provide confirmation: { "confirm": "RESET_ALL_DEVICES" }',
+    });
+  }
+
+  const previousVoterCount = userVotes.size;
+  userVotes.clear();
+  
+  // Update reset timestamp so frontend can detect the reset
+  lastDeviceResetTimestamp = new Date().toISOString();
+
+  console.log(`🔄 All device IDs have been reset. ${previousVoterCount} users can now vote again and select teams again.`);
+
+  res.json({
+    success: true,
+    message: `All device IDs have been reset. ${previousVoterCount} users can now vote again and select teams again.`,
+    previousVoterCount,
+    resetTimestamp: lastDeviceResetTimestamp,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Get device/voter statistics (admin endpoint)
+app.get('/api/admin/devices', (req, res) => {
+  res.json({
+    totalUniqueDevices: userVotes.size,
+    totalVotes: votes.length,
+    devicesWithVotes: Array.from(userVotes),
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Server error:', err);
@@ -233,6 +272,8 @@ app.listen(PORT, () => {
   console.log(`   GET  /api/vote-status/:id - Check if user voted`);
   console.log(`   GET  /api/admin/votes - Get all votes (admin)`);
   console.log(`   POST /api/admin/reset - Reset all votes (admin)`);
+  console.log(`   POST /api/admin/reset-devices - Reset all device IDs (admin)`);
+  console.log(`   GET  /api/admin/devices - Get device statistics (admin)`);
 });
 
 module.exports = app;

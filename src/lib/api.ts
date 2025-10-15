@@ -40,6 +40,7 @@ export interface VoteResults {
 export interface VoteStatus {
   hasVoted: boolean;
   identifier: string;
+  lastDeviceResetTimestamp?: string | null;
 }
 
 // Generate a unique identifier for the user (stored in localStorage)

@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import React from 'react';
+import Image from 'next/image';
 
 import { getAvailableTeamsToVote, getTeamById, Team } from '@/lib/voting';
 
@@ -24,18 +25,26 @@ export default function VotingInterface({ userTeam, onVote, isSubmitting = false
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="text-6xl mb-4">🗳️</div>
+          <div className="mb-2 flex justify-center">
+            <Image 
+              src="/images/vase.png" 
+              alt="Vase" 
+              width={136} 
+              height={136}
+              className="object-contain"
+            />
+          </div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Cast Your Vote
+            Bầu chọn thôi nào!
           </h1>
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <span className="text-gray-600">You're from</span>
+            <span className="text-gray-600">Bạn thuộc đội</span>
             <div className={`px-3 py-1 rounded-full text-white text-sm font-medium ${userTeamData?.color}`}>
               {userTeamData?.emoji} {userTeamData?.name}
             </div>
           </div>
           <p className="text-gray-600">
-            Vote for the team with the most beautiful vase
+            Bình chọn bình hoa đẹp nhất
           </p>
         </motion.div>
 
@@ -117,6 +126,23 @@ export default function VotingInterface({ userTeam, onVote, isSubmitting = false
               You can only vote once! Choose carefully.
             </span>
           </div>
+        </motion.div>
+
+        {/* Footer with i3 Logo */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          className="fixed bottom-4 left-4 flex items-center space-x-2 opacity-60"
+        >
+          <Image 
+            src="/images/i3_logo.png" 
+            alt="i3 International" 
+            width={32} 
+            height={32}
+            className="object-contain"
+          />
+          <span className="text-xs text-gray-400">Powered by i3 International</span>
         </motion.div>
       </div>
     </div>

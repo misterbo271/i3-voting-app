@@ -1,0 +1,485 @@
+{% extends 'management/base.html' %}
+
+{% block title %}Admin Actions{% endblock %}
+
+{% block page_icon %}<i class="fas fa-cogs me-2"></i>{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Backend Status -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-server me-2"></i>Backend Server Status
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <strong>Status:</strong>
+                    </div>
+                    <div class="col-sm-6">
+                        {% if backend_status == 'healthy' %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle me-1"></i>Healthy
+                            </span>
+                        {% else %}
+                            <span class="badge bg-danger">
+                                <i class="fas fa-times-circle me-1"></i>Error
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if backend_info %}
+                    <hr>
+                    <div class="row">
+                        <div class="col-12">
+                            <strong>Details:</strong>
+                            <pre class="bg-light p-2 mt-2 rounded"><code>{{ backend_info|pprint }}</code></pre>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <hr>
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="checkBackendHealth()">
+                    <i class="fas fa-sync-alt me-1"></i>Refresh Status
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Management -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-database me-2"></i>Data Management
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-success" onclick="syncVotes()">
+                        <i class="fas fa-download me-2"></i>Sync Votes from Backend
+                    </button>
+                    
+                    <button type="button" class="btn btn-info" onclick="syncResults()">
+                        <i class="fas fa-chart-bar me-2"></i>Sync Results from Backend
+                    </button>
+                    
+                    <button type="button" class="btn btn-primary" onclick="syncAll()">
+                        <i class="fas fa-sync me-2"></i>Sync All Data
+                    </button>
+                    
+                    <hr>
+                    
+                    <button type="button" class="btn btn-warning" onclick="exportData()">
+                        <i class="fas fa-file-export me-2"></i>Export Data (JSON)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Danger Zone -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow border-danger">
+            <div class="card-header bg-danger text-white py-3">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Danger Zone
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warning!</strong> The actions below are irreversible and will affect both the backend server and local database.
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>Reset All Votes</h6>
+                        <p class="text-muted small">
+                            This will permanently delete all votes from both the backend server and local database. 
+                            This action cannot be undone.
+                        </p>
+                        <button type="button" class="btn btn-danger" onclick="showResetConfirmation()">
+                            <i class="fas fa-trash me-2"></i>Reset All Votes
+                        </button>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <h6>Reset Device IDs</h6>
+                        <p class="text-muted small">
+                            This will reset all device/IP identifiers and clear team selections, allowing all users to vote again and select teams again. 
+                            Existing votes will remain intact.
+                        </p>
+                        <button type="button" class="btn btn-warning" onclick="showResetDevicesConfirmation()">
+                            <i class="fas fa-mobile-alt me-2"></i>Reset Device IDs
+                        </button>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <h6>Clear Local Cache</h6>
+                        <p class="text-muted small">
+                            This will clear only the local database cache. Backend data will remain intact.
+                        </p>
+                        <button type="button" class="btn btn-info" onclick="clearLocalCache()">
+                            <i class="fas fa-broom me-2"></i>Clear Local Cache
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Votes Confirmation Modal -->
+<div class="modal fade" id="resetConfirmationModal" tabindex="-1" aria-labelledby="resetConfirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="resetConfirmationModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Reset All Votes
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger" role="alert">
+                    <strong>This action is irreversible!</strong>
+                </div>
+                <p>Are you sure you want to reset all voting data? This will:</p>
+                <ul>
+                    <li>Delete all votes from the backend server</li>
+                    <li>Clear all local cached data</li>
+                    <li>Reset vote counts to zero</li>
+                    <li>Remove all voting history</li>
+                </ul>
+                <p><strong>Type "RESET ALL VOTES" to confirm:</strong></p>
+                <input type="text" class="form-control" id="resetConfirmationInput" placeholder="Type confirmation text here">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmResetBtn" onclick="resetAllVotes()" disabled>
+                    <i class="fas fa-trash me-2"></i>Reset All Votes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Device IDs Confirmation Modal -->
+<div class="modal fade" id="resetDevicesModal" tabindex="-1" aria-labelledby="resetDevicesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="resetDevicesModalLabel">
+                    <i class="fas fa-mobile-alt me-2"></i>Confirm Reset Device IDs
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning" role="alert">
+                    <strong>This will allow all users to vote again!</strong>
+                </div>
+                <p>Are you sure you want to reset all device IDs? This will:</p>
+                <ul>
+                    <li>Clear all device/IP identifiers from the backend</li>
+                    <li>Clear team selections from all user devices</li>
+                    <li>Allow all users to vote again and select teams again</li>
+                    <li>Keep existing votes intact</li>
+                    <li>Reset the "has voted" status for all users</li>
+                </ul>
+                <p><strong>Type "RESET DEVICES" to confirm:</strong></p>
+                <input type="text" class="form-control" id="resetDevicesInput" placeholder="Type confirmation text here">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-warning" id="confirmResetDevicesBtn" onclick="resetAllDevices()" disabled>
+                    <i class="fas fa-mobile-alt me-2"></i>Reset Device IDs
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Backend health check
+function checkBackendHealth() {
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Checking...';
+    btn.disabled = true;
+    
+    fetch('{% url "management:health_check_ajax" %}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('success', 'Backend is healthy and responding');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showAlert('danger', 'Backend health check failed: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            showAlert('danger', 'Failed to check backend health: ' + error.message);
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+}
+
+// Sync functions
+function syncVotes() {
+    performSync('votes', '{% url "management:sync_votes_ajax" %}');
+}
+
+function syncResults() {
+    performSync('results', '{% url "management:sync_results_ajax" %}');
+}
+
+function syncAll() {
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Syncing All...';
+    btn.disabled = true;
+    
+    Promise.all([
+        fetch('{% url "management:sync_votes_ajax" %}', { method: 'POST' }),
+        fetch('{% url "management:sync_results_ajax" %}', { method: 'POST' })
+    ])
+    .then(responses => Promise.all(responses.map(r => r.json())))
+    .then(results => {
+        let success = true;
+        let messages = [];
+        
+        results.forEach(result => {
+            if (result.success) {
+                messages.push(result.message);
+            } else {
+                success = false;
+                messages.push(result.error || 'Sync failed');
+            }
+        });
+        
+        if (success) {
+            showAlert('success', 'All data synced successfully');
+        } else {
+            showAlert('danger', 'Some sync operations failed: ' + messages.join(', '));
+        }
+    })
+    .catch(error => {
+        showAlert('danger', 'Sync failed: ' + error.message);
+    })
+    .finally(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+
+function performSync(type, url) {
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i>Syncing ${type}...`;
+    btn.disabled = true;
+    
+    fetch(url, { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('success', data.message);
+            } else {
+                showAlert('danger', data.error || `Failed to sync ${type}`);
+            }
+        })
+        .catch(error => {
+            showAlert('danger', `Failed to sync ${type}: ` + error.message);
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+}
+
+// Export data
+function exportData() {
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Exporting...';
+    btn.disabled = true;
+    
+    fetch('{% url "management:dashboard_stats_ajax" %}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const exportData = {
+                    exported_at: new Date().toISOString(),
+                    stats: data.stats,
+                    votes: [], // Would need separate endpoint for detailed votes
+                    metadata: {
+                        source: 'Django Admin Interface',
+                        version: '1.0'
+                    }
+                };
+                
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `voting-data-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showAlert('success', 'Data exported successfully');
+            } else {
+                showAlert('danger', 'Failed to export data: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            showAlert('danger', 'Export failed: ' + error.message);
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+}
+
+// Reset confirmation
+function showResetConfirmation() {
+    const modal = new bootstrap.Modal(document.getElementById('resetConfirmationModal'));
+    modal.show();
+}
+
+function showResetDevicesConfirmation() {
+    const modal = new bootstrap.Modal(document.getElementById('resetDevicesModal'));
+    modal.show();
+}
+
+// Enable/disable reset button based on confirmation text
+document.getElementById('resetConfirmationInput').addEventListener('input', function() {
+    const confirmBtn = document.getElementById('confirmResetBtn');
+    const input = this.value.trim();
+    confirmBtn.disabled = input !== 'RESET ALL VOTES';
+});
+
+// Enable/disable reset devices button based on confirmation text
+document.getElementById('resetDevicesInput').addEventListener('input', function() {
+    const confirmBtn = document.getElementById('confirmResetDevicesBtn');
+    const input = this.value.trim();
+    confirmBtn.disabled = input !== 'RESET DEVICES';
+});
+
+// Reset all votes
+function resetAllVotes() {
+    const btn = document.getElementById('confirmResetBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Resetting...';
+    btn.disabled = true;
+    
+    fetch('{% url "management:reset_votes_ajax" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ confirm: true })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', 'All voting data has been reset successfully');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('resetConfirmationModal'));
+            modal.hide();
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            showAlert('danger', 'Failed to reset votes: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        showAlert('danger', 'Reset failed: ' + error.message);
+    })
+    .finally(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+
+// Reset all devices
+function resetAllDevices() {
+    const btn = document.getElementById('confirmResetDevicesBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Resetting...';
+    btn.disabled = true;
+    
+    fetch('{% url "management:reset_devices_ajax" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ confirm: true })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('success', data.message);
+            const modal = bootstrap.Modal.getInstance(document.getElementById('resetDevicesModal'));
+            modal.hide();
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            showAlert('danger', 'Failed to reset device IDs: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        showAlert('danger', 'Reset failed: ' + error.message);
+    })
+    .finally(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+
+// Clear local cache
+function clearLocalCache() {
+    if (confirm('Are you sure you want to clear the local cache? This will not affect backend data.')) {
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Clearing...';
+        btn.disabled = true;
+        
+        // This would need a separate endpoint to clear only local data
+        showAlert('info', 'Local cache clearing functionality would be implemented here');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }, 1000);
+    }
+}
+
+// Alert function
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container-fluid');
+    const firstRow = container.querySelector('.row');
+    container.insertBefore(alertDiv, firstRow);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

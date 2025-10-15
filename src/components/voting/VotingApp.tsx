@@ -7,6 +7,8 @@ import {
   loadVotingState,
   saveVotingState,
   VotingState,
+  checkAndHandleDeviceReset,
+  getInitialVotingState,
 } from '@/lib/voting';
 
 import TeamSelector from './TeamSelector';
@@ -27,6 +29,7 @@ export default function VotingApp() {
         
         // Load local state first
         const localState = loadVotingState(userIdentifier);
+        console.log('📱 Loaded local state:', localState);
         setVotingState(localState);
         
         // Check backend for vote status and results
@@ -35,10 +38,26 @@ export default function VotingApp() {
           api.getResults()
         ]);
         
+        console.log('🌐 Backend vote status:', voteStatus);
+        console.log('🌐 Backend results:', results);
+        
+        // Check if device reset occurred and clear local storage if needed
+        const wasReset = checkAndHandleDeviceReset(voteStatus.lastDeviceResetTimestamp);
+        console.log('🔄 Was reset detected?', wasReset);
+        
+        // If reset occurred, start with completely fresh state
+        let baseState;
+        if (wasReset) {
+          console.log('🔄 Reset detected - starting with fresh state, no team selected');
+          baseState = getInitialVotingState(userIdentifier);
+        } else {
+          baseState = localState;
+        }
+        
         // Update state with backend data
         const updatedState: VotingState = {
-          ...localState,
-          hasVoted: voteStatus.hasVoted,
+          ...baseState,
+          hasVoted: wasReset ? false : voteStatus.hasVoted, // If reset, user hasn't voted
           votes: results.results.reduce((acc, result) => {
             acc[result.teamId] = result.votes;
             return acc;

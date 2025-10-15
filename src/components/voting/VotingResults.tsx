@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import React from 'react';
+import Image from 'next/image';
 
 import { getTeamById, TEAMS, VotingState } from '@/lib/voting';
 
@@ -35,13 +36,13 @@ export default function VotingResults({ votingState }: VotingResultsProps) {
             Thank You for Voting!
           </h1>
           <div className="flex items-center justify-center space-x-2 mb-2">
-            <span className="text-gray-600">You voted for</span>
+            <span className="text-gray-600">Bạn đã vote cho</span>
             <div className={`px-3 py-1 rounded-full text-white text-sm font-medium ${votedForTeamData?.color}`}>
               {votedForTeamData?.emoji} {votedForTeamData?.name}
             </div>
           </div>
           <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
-            <span>as a member of</span>
+            <span>là thành viên của</span>
             <span className={`px-2 py-1 rounded-full text-white text-xs ${userTeamData?.color}`}>
               {userTeamData?.emoji} {userTeamData?.name}
             </span>
@@ -57,7 +58,7 @@ export default function VotingResults({ votingState }: VotingResultsProps) {
           <div className="text-center">
             <div className="text-4xl mb-2">{winningTeam.emoji}</div>
             <h2 className="text-xl font-bold text-gray-800 mb-1">
-              Current Leader
+              Đội dẫn đầu
             </h2>
             <div className={`inline-block px-4 py-2 rounded-full text-white font-semibold ${winningTeam.color}`}>
               {winningTeam.name}
@@ -70,7 +71,7 @@ export default function VotingResults({ votingState }: VotingResultsProps) {
 
         <div className="space-y-3">
           <h3 className="text-lg font-semibold text-gray-800 text-center mb-4">
-            All Results
+            Kết quả (real time)
           </h3>
           {sortedTeams.map((team, index) => (
             <motion.div
@@ -118,6 +119,23 @@ export default function VotingResults({ votingState }: VotingResultsProps) {
               Results update in real-time. You cannot vote again even if you refresh the page.
             </p>
           </div>
+        </motion.div>
+
+        {/* Footer with i3 Logo */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.2 }}
+          className="fixed bottom-4 left-4 flex items-center space-x-2 opacity-60"
+        >
+          <Image 
+            src="/images/i3_logo.png" 
+            alt="i3 International" 
+            width={32} 
+            height={32}
+            className="object-contain"
+          />
+          <span className="text-xs text-gray-400">Powered by i3 International</span>
         </motion.div>
       </div>
     </div>
