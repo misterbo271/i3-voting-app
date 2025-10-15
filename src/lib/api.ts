@@ -1,6 +1,6 @@
 // API service for communicating with the backend voting server
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
+const API_BASE_URL = 'https://i3-voting-app-server.vercel.app' || 'http://localhost:3002';
 
 export interface VoteRequest {
   userTeam: string;
