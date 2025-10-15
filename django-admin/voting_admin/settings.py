@@ -140,7 +140,29 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = False  # Set to True for development only
+CORS_ALLOW_ALL_ORIGINS = True  # Temporarily allow all origins for debugging
+
+# Additional CORS headers
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
 
 # REST Framework settings
 REST_FRAMEWORK = {
@@ -150,4 +172,12 @@ REST_FRAMEWORK = {
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
     ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [],
+    'DEFAULT_PERMISSION_CLASSES': [],
 }
+
+# CSRF settings for API
+CSRF_TRUSTED_ORIGINS = [
+    "https://i3-voting-app.vercel.app",
+    "https://*.vercel.app",
+]

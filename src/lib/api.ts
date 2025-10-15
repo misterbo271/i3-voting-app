@@ -1,6 +1,7 @@
 // API service for communicating with the backend voting server
 
-const API_BASE_URL = 'https://i3-voting-app-server.vercel.app' || 'http://localhost:3002';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://django-admin-iimee8isg-misterbo271s-projects.vercel.app/management';
+console.log('API_BASE_URL', API_BASE_URL);
 
 export interface VoteRequest {
   userTeam: string;
