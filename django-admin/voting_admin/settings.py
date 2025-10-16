@@ -26,7 +26,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,*.railway.app,*.render.com,*.herokuapp.com,*.vercel.app').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,192.168.20.52,*.railway.app,*.render.com,*.herokuapp.com,*.vercel.app').split(',')
 
 
 # Application definition
@@ -125,7 +125,7 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles_build' / 'static'
 
 # Voting API Configuration
-VOTING_API_BASE_URL = config('VOTING_API_BASE_URL', default='http://localhost:3002')
+VOTING_API_BASE_URL = config('VOTING_API_BASE_URL', default='http://192.168.20.52:3002')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -137,6 +137,9 @@ CORS_ALLOWED_ORIGINS = [
     "https://i3-voting-app.vercel.app",
     "http://localhost:3000",
     "http://localhost:3001",
+    "http://192.168.20.52:3000",
+    "http://192.168.20.52:3001",
+    "http://192.168.20.52:3002",
 ]
 
 CORS_ALLOW_CREDENTIALS = True

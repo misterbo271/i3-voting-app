@@ -65,7 +65,7 @@ Consider upgrading to a database:
 ### Environment Variables
 Create a `.env.local` file:
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:3002
+NEXT_PUBLIC_API_URL=http://192.168.20.52:3002
 PORT=3002
 ```
 
@@ -73,36 +73,36 @@ PORT=3002
 The server allows requests from:
 - `http://localhost:3000`
 - `http://localhost:3001`
-- `http://localhost:3002`
+- `http://192.168.20.52:3002`
 
 ## 🧪 Testing the API
 
 ### Using curl:
 ```bash
 # Health check
-curl http://localhost:3002/api/health
+curl http://192.168.20.52:3002/api/health
 
 # Get results
-curl http://localhost:3002/api/results
+curl http://192.168.20.52:3002/api/results
 
 # Submit a vote
-curl -X POST http://localhost:3002/api/vote \
+curl -X POST http://192.168.20.52:3002/api/vote \
   -H "Content-Type: application/json" \
   -d '{"userTeam":"team-a","votedFor":"team-b","userIdentifier":"test-user-123"}'
 
 # Check vote status
-curl http://localhost:3002/api/vote-status/test-user-123
+curl http://192.168.20.52:3002/api/vote-status/test-user-123
 ```
 
 ### Using the Browser Console:
 ```javascript
 // Test the API connection
-fetch('http://localhost:3002/api/health')
+fetch('http://192.168.20.52:3002/api/health')
   .then(r => r.json())
   .then(console.log);
 
 // Get current results
-fetch('http://localhost:3002/api/results')
+fetch('http://192.168.20.52:3002/api/results')
   .then(r => r.json())
   .then(console.log);
 ```
@@ -118,12 +118,12 @@ fetch('http://localhost:3002/api/results')
 
 ### View All Votes
 ```bash
-curl http://localhost:3002/api/admin/votes
+curl http://192.168.20.52:3002/api/admin/votes
 ```
 
 ### Reset All Votes (Use with caution!)
 ```bash
-curl -X POST http://localhost:3002/api/admin/reset \
+curl -X POST http://192.168.20.52:3002/api/admin/reset \
   -H "Content-Type: application/json" \
   -d '{"confirm":"RESET_ALL_VOTES"}'
 ```

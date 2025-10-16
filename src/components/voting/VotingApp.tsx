@@ -10,18 +10,27 @@ import {
   checkAndHandleDeviceReset,
   getInitialVotingState,
 } from '@/lib/voting';
+import { useClientOnly } from '@/lib/useClientOnly';
 
 import TeamSelector from './TeamSelector';
 import VotingInterface from './VotingInterface';
 import VotingResults from './VotingResults';
 
 export default function VotingApp() {
-  const [votingState, setVotingState] = useState<VotingState | null>(null);
+  // Use client-only hook to prevent hydration mismatches
+  const isClient = useClientOnly();
+  
+  // Initialize with a consistent state to prevent hydration mismatch
+  const [votingState, setVotingState] = useState<VotingState>(() => 
+    getInitialVotingState('temp-user-id')
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!isClient) return; // Only run on client side
+    
     const initializeApp = async () => {
       try {
         // Get user identifier
@@ -81,10 +90,9 @@ export default function VotingApp() {
     };
 
     initializeApp();
-  }, []);
+  }, [isClient]);
 
   const handleSelectTeam = (teamId: string) => {
-    if (!votingState) return;
     
     const newState = {
       ...votingState,
@@ -142,7 +150,8 @@ export default function VotingApp() {
     }
   };
 
-  if (isLoading) {
+  // Show loading state or wait for client hydration
+  if (isLoading || !isClient) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
@@ -153,17 +162,16 @@ export default function VotingApp() {
     );
   }
 
-  if (!votingState) {
+  // Show error state
+  if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center px-4">
         <div className="text-center text-red-600 max-w-md">
           <div className="text-6xl mb-4">❌</div>
           <div className="text-xl font-semibold mb-2">Error loading voting data</div>
-          {error && (
-            <div className="text-sm text-red-500 bg-red-50 p-3 rounded-lg border border-red-200">
-              {error}
-            </div>
-          )}
+          <div className="text-sm text-red-500 bg-red-50 p-3 rounded-lg border border-red-200">
+            {error}
+          </div>
         </div>
       </div>
     );
