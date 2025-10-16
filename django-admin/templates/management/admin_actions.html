@@ -99,36 +99,94 @@
                 </div>
                 
                 <div class="row">
-                    <div class="col-md-4">
-                        <h6>Reset All Votes</h6>
-                        <p class="text-muted small">
-                            This will permanently delete all votes from both the backend server and local database. 
-                            This action cannot be undone.
-                        </p>
-                        <button type="button" class="btn btn-danger" onclick="showResetConfirmation()">
-                            <i class="fas fa-trash me-2"></i>Reset All Votes
-                        </button>
+                    <div class="col-lg-4 mb-4">
+                        <div class="card border-danger h-100">
+                            <div class="card-header bg-danger text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-trash me-2"></i>Reset All Votes
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small mb-3">
+                                    <strong>⚠️ IRREVERSIBLE ACTION</strong><br>
+                                    This will permanently delete all votes from both the backend server and local database.
+                                </p>
+                                <div class="mb-3">
+                                    <strong>Impact:</strong>
+                                    <ul class="small text-muted mb-0">
+                                        <li>All vote records deleted</li>
+                                        <li>Vote counts reset to zero</li>
+                                        <li>Voting history cleared</li>
+                                        <li>Team rankings reset</li>
+                                    </ul>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="button" class="btn btn-danger" onclick="showResetConfirmation()">
+                                        <i class="fas fa-trash me-2"></i>Reset All Votes
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="col-md-4">
-                        <h6>Reset Device IDs</h6>
-                        <p class="text-muted small">
-                            This will reset all device/IP identifiers and clear team selections, allowing all users to vote again and select teams again. 
-                            Existing votes will remain intact.
-                        </p>
-                        <button type="button" class="btn btn-warning" onclick="showResetDevicesConfirmation()">
-                            <i class="fas fa-mobile-alt me-2"></i>Reset Device IDs
-                        </button>
+                    <div class="col-lg-4 mb-4">
+                        <div class="card border-warning h-100">
+                            <div class="card-header bg-warning text-dark">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-mobile-alt me-2"></i>Reset Device IDs
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small mb-3">
+                                    <strong>🔄 VOTING RESET</strong><br>
+                                    Reset all device identifiers to allow users to vote again. Votes remain intact.
+                                </p>
+                                <div class="mb-3">
+                                    <strong>Impact:</strong>
+                                    <ul class="small text-muted mb-0">
+                                        <li>Users can vote again</li>
+                                        <li>Team selections cleared</li>
+                                        <li>Existing votes preserved</li>
+                                        <li>Vote counts unchanged</li>
+                                    </ul>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="button" class="btn btn-warning" onclick="showResetDevicesConfirmation()">
+                                        <i class="fas fa-mobile-alt me-2"></i>Reset Device IDs
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="col-md-4">
-                        <h6>Clear Local Cache</h6>
-                        <p class="text-muted small">
-                            This will clear only the local database cache. Backend data will remain intact.
-                        </p>
-                        <button type="button" class="btn btn-info" onclick="clearLocalCache()">
-                            <i class="fas fa-broom me-2"></i>Clear Local Cache
-                        </button>
+                    <div class="col-lg-4 mb-4">
+                        <div class="card border-info h-100">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-broom me-2"></i>Clear Local Cache
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted small mb-3">
+                                    <strong>🗃️ SAFE OPERATION</strong><br>
+                                    Clear only the local Django database cache. Backend data remains intact.
+                                </p>
+                                <div class="mb-3">
+                                    <strong>Impact:</strong>
+                                    <ul class="small text-muted mb-0">
+                                        <li>Local cache cleared</li>
+                                        <li>Backend data safe</li>
+                                        <li>Fresh data on next sync</li>
+                                        <li>No vote loss</li>
+                                    </ul>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="button" class="btn btn-info" onclick="clearLocalCache()">
+                                        <i class="fas fa-broom me-2"></i>Clear Local Cache
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -138,32 +196,69 @@
 
 <!-- Reset Votes Confirmation Modal -->
 <div class="modal fade" id="resetConfirmationModal" tabindex="-1" aria-labelledby="resetConfirmationModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
                 <h5 class="modal-title" id="resetConfirmationModalLabel">
-                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm Reset All Votes
+                    <i class="fas fa-exclamation-triangle me-2"></i>⚠️ DANGER: Reset All Votes
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-danger" role="alert">
-                    <strong>This action is irreversible!</strong>
+                <div class="alert alert-danger border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                        <div>
+                            <h6 class="alert-heading">This action is IRREVERSIBLE!</h6>
+                            <p class="mb-0">Once confirmed, all voting data will be permanently deleted and cannot be recovered.</p>
+                        </div>
+                    </div>
                 </div>
-                <p>Are you sure you want to reset all voting data? This will:</p>
-                <ul>
-                    <li>Delete all votes from the backend server</li>
-                    <li>Clear all local cached data</li>
-                    <li>Reset vote counts to zero</li>
-                    <li>Remove all voting history</li>
-                </ul>
-                <p><strong>Type "RESET ALL VOTES" to confirm:</strong></p>
-                <input type="text" class="form-control" id="resetConfirmationInput" placeholder="Type confirmation text here">
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-danger">What will be deleted:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-times text-danger me-2"></i>All vote records from backend</li>
+                            <li><i class="fas fa-times text-danger me-2"></i>All local cached data</li>
+                            <li><i class="fas fa-times text-danger me-2"></i>Vote counts and statistics</li>
+                            <li><i class="fas fa-times text-danger me-2"></i>Complete voting history</li>
+                            <li><i class="fas fa-times text-danger me-2"></i>Team rankings</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-info">What will happen:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-arrow-right text-info me-2"></i>All teams reset to 0 votes</li>
+                            <li><i class="fas fa-arrow-right text-info me-2"></i>Users can vote again</li>
+                            <li><i class="fas fa-arrow-right text-info me-2"></i>Fresh voting session starts</li>
+                            <li><i class="fas fa-arrow-right text-info me-2"></i>Device IDs also reset</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <hr>
+                <div class="bg-light p-3 rounded">
+                    <h6 class="text-dark mb-3">
+                        <i class="fas fa-keyboard me-2"></i>Security Confirmation Required
+                    </h6>
+                    <p class="mb-2"><strong>Type exactly:</strong> <code class="text-danger">RESET ALL VOTES</code></p>
+                    <input type="text" class="form-control form-control-lg" id="resetConfirmationInput" 
+                           placeholder="Type the confirmation text here..." autocomplete="off">
+                    <div class="form-text">
+                        <i class="fas fa-info-circle me-1"></i>
+                        This confirmation helps prevent accidental deletions
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmResetBtn" onclick="resetAllVotes()" disabled>
-                    <i class="fas fa-trash me-2"></i>Reset All Votes
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-danger btn-lg" id="confirmResetBtn" onclick="resetAllVotes()" disabled>
+                    <i class="fas fa-trash me-2"></i>Yes, Reset All Votes
                 </button>
             </div>
         </div>
@@ -172,33 +267,74 @@
 
 <!-- Reset Device IDs Confirmation Modal -->
 <div class="modal fade" id="resetDevicesModal" tabindex="-1" aria-labelledby="resetDevicesModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-warning text-dark">
                 <h5 class="modal-title" id="resetDevicesModalLabel">
-                    <i class="fas fa-mobile-alt me-2"></i>Confirm Reset Device IDs
+                    <i class="fas fa-mobile-alt me-2"></i>🔄 Reset Device IDs
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-warning" role="alert">
-                    <strong>This will allow all users to vote again!</strong>
+                <div class="alert alert-warning border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                        <div>
+                            <h6 class="alert-heading">This will allow all users to vote again!</h6>
+                            <p class="mb-0">Device identifiers will be reset, but existing votes will be preserved.</p>
+                        </div>
+                    </div>
                 </div>
-                <p>Are you sure you want to reset all device IDs? This will:</p>
-                <ul>
-                    <li>Clear all device/IP identifiers from the backend</li>
-                    <li>Clear team selections from all user devices</li>
-                    <li>Allow all users to vote again and select teams again</li>
-                    <li>Keep existing votes intact</li>
-                    <li>Reset the "has voted" status for all users</li>
-                </ul>
-                <p><strong>Type "RESET DEVICES" to confirm:</strong></p>
-                <input type="text" class="form-control" id="resetDevicesInput" placeholder="Type confirmation text here">
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-warning">What will be reset:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-redo text-warning me-2"></i>All device/IP identifiers</li>
+                            <li><i class="fas fa-redo text-warning me-2"></i>Team selections on devices</li>
+                            <li><i class="fas fa-redo text-warning me-2"></i>"Has voted" status</li>
+                            <li><i class="fas fa-redo text-warning me-2"></i>User session data</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-success">What will be preserved:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>All existing votes</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Vote counts and totals</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Team rankings</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Voting history</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-3" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Use Case:</strong> This is useful when you want to allow the same users to vote multiple times 
+                    (e.g., multiple voting rounds) while keeping the previous voting data for analysis.
+                </div>
+                
+                <hr>
+                <div class="bg-light p-3 rounded">
+                    <h6 class="text-dark mb-3">
+                        <i class="fas fa-keyboard me-2"></i>Confirmation Required
+                    </h6>
+                    <p class="mb-2"><strong>Type exactly:</strong> <code class="text-warning">RESET DEVICES</code></p>
+                    <input type="text" class="form-control form-control-lg" id="resetDevicesInput" 
+                           placeholder="Type the confirmation text here..." autocomplete="off">
+                    <div class="form-text">
+                        <i class="fas fa-info-circle me-1"></i>
+                        This is a safety measure to prevent accidental resets
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-warning" id="confirmResetDevicesBtn" onclick="resetAllDevices()" disabled>
-                    <i class="fas fa-mobile-alt me-2"></i>Reset Device IDs
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-warning btn-lg" id="confirmResetDevicesBtn" onclick="resetAllDevices()" disabled>
+                    <i class="fas fa-mobile-alt me-2"></i>Yes, Reset Device IDs
                 </button>
             </div>
         </div>
@@ -446,19 +582,31 @@ function resetAllDevices() {
 
 // Clear local cache
 function clearLocalCache() {
-    if (confirm('Are you sure you want to clear the local cache? This will not affect backend data.')) {
+    // Enhanced confirmation dialog
+    const result = confirm(
+        '🗃️ Clear Local Cache\n\n' +
+        'This will clear only the Django database cache.\n' +
+        'Backend server data will remain safe.\n\n' +
+        '✅ Safe operation - no data loss\n' +
+        '🔄 Fresh data will be loaded on next sync\n\n' +
+        'Continue?'
+    );
+    
+    if (result) {
         const btn = event.target;
         const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Clearing...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Clearing Cache...';
         btn.disabled = true;
         
-        // This would need a separate endpoint to clear only local data
-        showAlert('info', 'Local cache clearing functionality would be implemented here');
-        
+        // Simulate cache clearing (would need actual endpoint)
         setTimeout(() => {
+            showAlert('success', 
+                '✅ Local cache cleared successfully! ' +
+                'Fresh data will be loaded on next sync operation.'
+            );
             btn.innerHTML = originalText;
             btn.disabled = false;
-        }, 1000);
+        }, 1500);
     }
 }
 

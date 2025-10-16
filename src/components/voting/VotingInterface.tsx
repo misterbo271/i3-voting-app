@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import React from 'react';
 import Image from 'next/image';
 
-import { getAvailableTeamsToVote, getTeamById, Team } from '@/lib/voting';
+import { getAllTeamsToVote, getTeamById, Team } from '@/lib/voting';
 
 interface VotingInterfaceProps {
   userTeam: string;
@@ -14,7 +14,7 @@ interface VotingInterfaceProps {
 }
 
 export default function VotingInterface({ userTeam, onVote, isSubmitting = false, error }: VotingInterfaceProps) {
-  const availableTeams = getAvailableTeamsToVote(userTeam);
+  const availableTeams = getAllTeamsToVote();
   const userTeamData = getTeamById(userTeam);
 
   return (
@@ -35,7 +35,7 @@ export default function VotingInterface({ userTeam, onVote, isSubmitting = false
             />
           </div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Bầu chọn thôi nào!
+            Lượt vote thứ 2!
           </h1>
           <div className="flex items-center justify-center space-x-2 mb-4">
             <span className="text-gray-600">Bạn thuộc đội</span>
@@ -44,7 +44,7 @@ export default function VotingInterface({ userTeam, onVote, isSubmitting = false
             </div>
           </div>
           <p className="text-gray-600">
-            Bình chọn bình hoa đẹp nhất
+            Chọn đội bạn nghĩ có bình hoa đẹp nhất
           </p>
         </motion.div>
 
@@ -68,7 +68,14 @@ export default function VotingInterface({ userTeam, onVote, isSubmitting = false
               <div className="flex items-center justify-center space-x-3 relative z-10">
                 <span className="text-4xl">{team.emoji}</span>
                 <div className="text-left">
-                  <div className="text-xl font-semibold">{team.name}</div>
+                  <div className="text-xl font-semibold flex items-center space-x-2">
+                    <span>{team.name}</span>
+                    {team.id === userTeam && (
+                      <span className="text-sm bg-white bg-opacity-20 px-2 py-1 rounded-full">
+                        Đội của bạn
+                      </span>
+                    )}
+                  </div>
                   <div className="text-sm opacity-90">
                     {isSubmitting ? 'Submitting...' : 'Vote for this team'}
                   </div>
@@ -118,13 +125,14 @@ export default function VotingInterface({ userTeam, onVote, isSubmitting = false
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-xl"
+          className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-xl"
         >
-          <div className="flex items-center space-x-2 text-yellow-800">
-            <span className="text-lg">⚠️</span>
-            <span className="text-sm font-medium">
-              You can only vote once! Choose carefully.
-            </span>
+          <div className="flex items-center space-x-2 text-blue-800">
+            <span className="text-lg">ℹ️</span>
+            <div className="text-sm">
+              <div className="font-medium mb-1">Lượt vote thứ 2 của bạn</div>
+              <div>Bạn có thể vote cho bất kỳ đội nào, kể cả đội của mình!</div>
+            </div>
           </div>
         </motion.div>
 

@@ -8,6 +8,8 @@ export interface Team {
 export interface VotingState {
   userTeam: string | null;
   hasVoted: boolean;
+  ownTeamVote: boolean;
+  otherTeamVote: boolean;
   votedFor: string | null;
   votes: Record<string, number>;
   userIdentifier: string;
@@ -26,6 +28,8 @@ const RESET_TIMESTAMP_KEY = 'vase-last-reset-timestamp';
 export const getInitialVotingState = (userIdentifier: string): VotingState => ({
   userTeam: null,
   hasVoted: false,
+  ownTeamVote: false,
+  otherTeamVote: false,
   votedFor: null,
   votes: {
     'team-a': 0,
@@ -66,6 +70,10 @@ export const getAvailableTeamsToVote = (userTeam: string): Team[] => {
   return TEAMS.filter(team => team.id !== userTeam);
 };
 
+export const getAllTeamsToVote = (): Team[] => {
+  return TEAMS;
+};
+
 export const getTeamById = (id: string): Team | undefined => {
   return TEAMS.find(team => team.id === id);
 };
@@ -80,15 +88,16 @@ export const checkAndHandleDeviceReset = (resetTimestamp: string | null): boolea
     
     // If we have a reset timestamp from server and it's different from what we know
     if (resetTimestamp && resetTimestamp !== lastKnownReset) {
-      console.log('🔄 Device reset detected, clearing ALL local storage...');
+      console.log('🔄 Device reset detected, clearing voting state but preserving user ID...');
       
-      // Clear ALL voting-related data completely
+      // Clear voting state but PRESERVE user identifier
       localStorage.removeItem(STORAGE_KEY);
       localStorage.setItem(RESET_TIMESTAMP_KEY, resetTimestamp);
       
-      // Also clear any other potential voting keys (just in case)
+      // Clear other voting keys but NOT the user identifier
       Object.keys(localStorage).forEach(key => {
-        if (key.includes('vase') || key.includes('voting') || key.includes('team')) {
+        if ((key.includes('vase') || key.includes('voting') || key.includes('team')) && 
+            key !== 'voting-user-id') { // PRESERVE user identifier
           localStorage.removeItem(key);
         }
       });

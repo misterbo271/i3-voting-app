@@ -11,9 +11,6 @@ interface VotingResultsProps {
 }
 
 export default function VotingResults({ votingState }: VotingResultsProps) {
-  const userTeamData = getTeamById(votingState.userTeam!);
-  const votedForTeamData = getTeamById(votingState.votedFor!);
-  
   const totalVotes = Object.values(votingState.votes).reduce((sum, votes) => sum + votes, 0);
   const sortedTeams = TEAMS.map(team => ({
     ...team,
@@ -33,19 +30,13 @@ export default function VotingResults({ votingState }: VotingResultsProps) {
         >
           <div className="text-6xl mb-4">🎉</div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Thank You for Voting!
+            Cảm ơn bạn đã bình chọn!
           </h1>
-          <div className="flex items-center justify-center space-x-2 mb-2">
-            <span className="text-gray-600">Bạn đã vote cho</span>
-            <div className={`px-3 py-1 rounded-full text-white text-sm font-medium ${votedForTeamData?.color}`}>
-              {votedForTeamData?.emoji} {votedForTeamData?.name}
-            </div>
-          </div>
-          <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
-            <span>là thành viên của</span>
-            <span className={`px-2 py-1 rounded-full text-white text-xs ${userTeamData?.color}`}>
-              {userTeamData?.emoji} {userTeamData?.name}
-            </span>
+          <p className="text-gray-600 mb-4">
+            Bạn đã bình chọn cho 2 đội yêu thích của mình
+          </p>
+          <div className="text-sm text-gray-500">
+            Kết quả được cập nhật theo thời gian thực
           </div>
         </motion.div>
 
@@ -116,7 +107,7 @@ export default function VotingResults({ votingState }: VotingResultsProps) {
           <div className="text-blue-800">
             <span className="text-lg">ℹ️</span>
             <p className="text-sm mt-1">
-              Results update in real-time. You cannot vote again even if you refresh the page.
+              Kết quả cập nhật theo thời gian thực. Bạn không thể vote lại kể cả khi refresh trang.
             </p>
           </div>
         </motion.div>

@@ -136,35 +136,122 @@
                 <h6 class="m-0 font-weight-bold text-primary">
                     <i class="fas fa-trophy me-2"></i>Team Rankings
                 </h6>
+                <div class="dropdown no-arrow">
+                    <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="dropdownMenuLink">
+                        <div class="dropdown-header">Actions:</div>
+                        <a class="dropdown-item" href="#" onclick="refreshRankings()">
+                            <i class="fas fa-sync fa-sm fa-fw me-2 text-gray-400"></i>Refresh Rankings
+                        </a>
+                        <a class="dropdown-item" href="#" onclick="exportRankings()">
+                            <i class="fas fa-download fa-sm fa-fw me-2 text-gray-400"></i>Export Data
+                        </a>
+                    </div>
+                </div>
             </div>
             <div class="card-body">
                 <div id="team-rankings">
                     {% for team in team_performance %}
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="me-3">
-                                <div class="icon-circle bg-primary">
-                                    <i class="fas fa-users text-white"></i>
+                        {% if forloop.first %}
+                            <!-- Winner/Leading Team -->
+                            <div class="d-flex align-items-center mb-4 p-3 bg-gradient-primary rounded text-white">
+                                <div class="me-3">
+                                    <div class="icon-circle bg-warning">
+                                        <i class="fas fa-crown text-white"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="small opacity-75">🏆 Leading Team</div>
+                                    <div class="font-weight-bold h5 mb-1">{{ team.name }}</div>
+                                    <div class="small">{{ team.votes }} votes ({{ team.percentage|floatformat:1 }}%)</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="h4 mb-0">{{ forloop.counter }}</div>
+                                    <div class="small opacity-75">RANK</div>
                                 </div>
                             </div>
-                            <div class="flex-grow-1">
-                                <div class="small text-gray-500">{{ team.name }}</div>
-                                <div class="font-weight-bold">{{ team.votes }} votes ({{ team.percentage }}%)</div>
-                                <div class="progress progress-sm">
-                                    <div class="progress-bar bg-primary" role="progressbar" 
-                                         style="width: {{ team.percentage }}%" 
-                                         aria-valuenow="{{ team.percentage }}" 
-                                         aria-valuemin="0" aria-valuemax="100">
+                        {% else %}
+                            <!-- Other Teams -->
+                            <div class="d-flex align-items-center mb-3 p-2 rounded {% if forloop.counter == 2 %}bg-light{% endif %}">
+                                <div class="me-3">
+                                    <div class="position-relative">
+                                        {% if forloop.counter == 2 %}
+                                            <div class="icon-circle bg-secondary">
+                                                <i class="fas fa-medal text-white"></i>
+                                            </div>
+                                        {% elif forloop.counter == 3 %}
+                                            <div class="icon-circle bg-warning">
+                                                <i class="fas fa-award text-white"></i>
+                                            </div>
+                                        {% else %}
+                                            <div class="icon-circle bg-light">
+                                                <i class="fas fa-users text-gray-600"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">
+                                            {{ forloop.counter }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <div class="font-weight-bold">{{ team.name }}</div>
+                                        <div class="small text-muted">{{ team.percentage|floatformat:1 }}%</div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="small text-gray-600">{{ team.votes }} votes</div>
+                                        {% if team.votes > 0 %}
+                                            <div class="small text-success">
+                                                <i class="fas fa-arrow-up me-1"></i>Active
+                                            </div>
+                                        {% else %}
+                                            <div class="small text-muted">
+                                                <i class="fas fa-minus me-1"></i>No votes
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="progress progress-sm">
+                                        <div class="progress-bar {% if forloop.counter == 2 %}bg-secondary{% elif forloop.counter == 3 %}bg-warning{% else %}bg-info{% endif %}" 
+                                             role="progressbar" 
+                                             style="width: {{ team.percentage }}%" 
+                                             aria-valuenow="{{ team.percentage }}" 
+                                             aria-valuemin="0" aria-valuemax="100">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        {% endif %}
                     {% empty %}
-                        <div class="text-center text-muted">
-                            <i class="fas fa-inbox fa-2x mb-2"></i>
-                            <p>No voting data available</p>
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-trophy fa-3x mb-3 text-gray-300"></i>
+                            <h6 class="text-gray-500">No Voting Data</h6>
+                            <p class="small mb-0">Rankings will appear here once voting begins</p>
+                            <button class="btn btn-sm btn-outline-primary mt-2" onclick="refreshRankings()">
+                                <i class="fas fa-sync me-1"></i>Check for Updates
+                            </button>
                         </div>
                     {% endfor %}
                 </div>
+                
+                {% if team_performance %}
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="small text-muted">Total Votes</div>
+                            <div class="font-weight-bold">{{ stats.total_votes|default:0 }}</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="small text-muted">Participants</div>
+                            <div class="font-weight-bold">{{ stats.unique_voters|default:0 }}</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="small text-muted">Teams</div>
+                            <div class="font-weight-bold">{{ team_performance|length }}</div>
+                        </div>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -317,6 +404,78 @@ if (chartData && chartData.length > 0) {
 // Dashboard functions
 function refreshDashboard() {
     location.reload();
+}
+
+// Team Rankings functions
+function refreshRankings() {
+    const btn = event.target.closest('a') || event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Refreshing...';
+    
+    fetch('{% url "management:dashboard_stats_ajax" %}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update the rankings section
+                location.reload(); // For now, just reload. Could be made more dynamic.
+            } else {
+                showAlert('danger', 'Failed to refresh rankings: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            showAlert('danger', 'Failed to refresh rankings: ' + error.message);
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+        });
+}
+
+function exportRankings() {
+    const btn = event.target.closest('a');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Exporting...';
+    
+    fetch('{% url "management:dashboard_stats_ajax" %}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.stats) {
+                const exportData = {
+                    exported_at: new Date().toISOString(),
+                    export_type: 'team_rankings',
+                    team_performance: data.stats.results || [],
+                    summary: {
+                        total_votes: data.stats.total_votes || 0,
+                        unique_voters: data.stats.unique_voters || 0,
+                        teams_count: (data.stats.results || []).length,
+                        leading_team: (data.stats.results || [])[0]?.teamName || 'None'
+                    },
+                    metadata: {
+                        source: 'Django Admin - Team Rankings',
+                        version: '1.0'
+                    }
+                };
+                
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `team-rankings-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showAlert('success', 'Team rankings exported successfully');
+            } else {
+                showAlert('danger', 'Failed to export rankings: ' + (data.error || 'No data available'));
+            }
+        })
+        .catch(error => {
+            showAlert('danger', 'Export failed: ' + error.message);
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+        });
 }
 
 function syncData() {

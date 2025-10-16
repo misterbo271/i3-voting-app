@@ -7,14 +7,25 @@ export interface VoteRequest {
   userTeam: string;
   votedFor: string;
   userIdentifier: string;
+  voteType: 'own-team' | 'other-team';
 }
 
-export interface VoteResponse {
+export interface DualVoteRequest {
+  team1: string;
+  team2: string;
+  userIdentifier: string;
+}
+
+export interface SimpleVoteRequest {
+  teamId: string;
+  userIdentifier: string;
+}
+
+export interface SimpleVoteResponse {
   success: boolean;
   message: string;
   vote: {
     id: string;
-    userTeam: string;
     votedFor: string;
     timestamp: string;
   };
@@ -25,6 +36,57 @@ export interface VoteResponse {
     'team-d': number;
   };
   totalVotes: number;
+}
+
+export interface VoteResponse {
+  success: boolean;
+  message: string;
+  vote: {
+    id: string;
+    userTeam: string;
+    votedFor: string;
+    timestamp: string;
+    voteType: 'own-team' | 'other-team';
+  };
+  results: {
+    'team-a': number;
+    'team-b': number;
+    'team-c': number;
+    'team-d': number;
+  };
+  totalVotes: number;
+  userVoteStatus: {
+    ownTeamVote: boolean;
+    otherTeamVote: boolean;
+  };
+}
+
+export interface DualVoteResponse {
+  success: boolean;
+  message: string;
+  votes: {
+    team1: {
+      id: string;
+      votedFor: string;
+      timestamp: string;
+    };
+    team2: {
+      id: string;
+      votedFor: string;
+      timestamp: string;
+    };
+  };
+  results: {
+    'team-a': number;
+    'team-b': number;
+    'team-c': number;
+    'team-d': number;
+  };
+  totalVotes: number;
+  userVoteStatus: {
+    ownTeamVote: boolean;
+    otherTeamVote: boolean;
+  };
 }
 
 export interface VoteResults {
@@ -40,6 +102,8 @@ export interface VoteResults {
 
 export interface VoteStatus {
   hasVoted: boolean;
+  ownTeamVote?: boolean;
+  otherTeamVote?: boolean;
   identifier: string;
   lastDeviceResetTimestamp?: string | null;
 }
@@ -57,6 +121,9 @@ export const getUserIdentifier = (): string => {
       identifier = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     }
     localStorage.setItem('voting-user-id', identifier);
+    console.log('🆔 Generated NEW user identifier:', identifier);
+  } else {
+    console.log('🆔 Using EXISTING user identifier:', identifier);
   }
   return identifier;
 };
@@ -93,6 +160,44 @@ export const api = {
   // Submit a vote
   async submitVote(voteData: VoteRequest): Promise<VoteResponse> {
     const response = await fetch(`${API_BASE_URL}/api/vote`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(voteData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || `Vote submission failed: ${response.statusText}`);
+    }
+
+    return data;
+  },
+
+  // Submit dual vote (both own team and selected team in one request)
+  async submitDualVote(voteData: DualVoteRequest): Promise<DualVoteResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/vote-dual`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(voteData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || `Dual vote submission failed: ${response.statusText}`);
+    }
+
+    return data;
+  },
+
+  // Submit simple single vote
+  async submitSimpleVote(voteData: SimpleVoteRequest): Promise<SimpleVoteResponse> {
+    const response = await fetch(`${API_BASE_URL}/api/vote-simple`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

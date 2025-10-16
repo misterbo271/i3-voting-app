@@ -13,20 +13,24 @@ import {
 import { useClientOnly } from '@/lib/useClientOnly';
 
 import TeamSelector from './TeamSelector';
-import VotingInterface from './VotingInterface';
 import VotingResults from './VotingResults';
 
 export default function VotingApp() {
   // Use client-only hook to prevent hydration mismatches
   const isClient = useClientOnly();
   
-  // Initialize with a consistent state to prevent hydration mismatch
-  const [votingState, setVotingState] = useState<VotingState>(() => 
-    getInitialVotingState('temp-user-id')
-  );
+  // Initialize with null to prevent premature rendering
+  const [votingState, setVotingState] = useState<VotingState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Watch for voting state changes to ensure proper component rendering
+  useEffect(() => {
+    if (votingState?.hasVoted) {
+      console.log('🔄 Voting state changed - user has voted, should show results');
+    }
+  }, [votingState?.hasVoted]);
 
   useEffect(() => {
     if (!isClient) return; // Only run on client side
@@ -35,13 +39,13 @@ export default function VotingApp() {
       try {
         // Get user identifier
         const userIdentifier = getUserIdentifier();
+        console.log('🔍 Initializing app with user identifier:', userIdentifier);
         
-        // Load local state first
+        // Load local state but DON'T set it yet - wait for backend check first
         const localState = loadVotingState(userIdentifier);
         console.log('📱 Loaded local state:', localState);
-        setVotingState(localState);
         
-        // Check backend for vote status and results
+        // Check backend for vote status and results FIRST
         const [voteStatus, results] = await Promise.all([
           api.getVoteStatus(userIdentifier),
           api.getResults()
@@ -67,11 +71,20 @@ export default function VotingApp() {
         const updatedState: VotingState = {
           ...baseState,
           hasVoted: wasReset ? false : voteStatus.hasVoted, // If reset, user hasn't voted
+          ownTeamVote: wasReset ? false : (voteStatus.ownTeamVote || false),
+          otherTeamVote: wasReset ? false : (voteStatus.otherTeamVote || false),
           votes: results.results.reduce((acc, result) => {
             acc[result.teamId] = result.votes;
             return acc;
           }, {} as Record<string, number>),
         };
+        
+        console.log('🔄 Final state after initialization:', { 
+          hasVoted: updatedState.hasVoted,
+          ownTeamVote: updatedState.ownTeamVote,
+          otherTeamVote: updatedState.otherTeamVote,
+          wasReset: wasReset 
+        });
         
         setVotingState(updatedState);
         saveVotingState(updatedState);
@@ -92,48 +105,46 @@ export default function VotingApp() {
     initializeApp();
   }, [isClient]);
 
-  const handleSelectTeam = (teamId: string) => {
-    
-    const newState = {
-      ...votingState,
-      userTeam: teamId,
-    };
-    
-    setVotingState(newState);
-    saveVotingState(newState);
-  };
-
-  const handleVote = async (teamId: string) => {
-    if (!votingState || votingState.hasVoted || !votingState.userTeam || isSubmitting) return;
+  const handleSubmitVotes = async (team1: string, team2: string) => {
+    if (!votingState || votingState.hasVoted || isSubmitting) return;
     
     setIsSubmitting(true);
     setError(null);
     
     try {
-      console.log('📤 Submitting vote to backend...');
+      console.log('📤 Submitting dual votes to backend...');
       
-      // Submit vote to backend
-      const response = await api.submitVote({
-        userTeam: votingState.userTeam,
-        votedFor: teamId,
+      // Submit dual votes to backend
+      const response = await api.submitDualVote({
+        team1: team1,
+        team2: team2,
         userIdentifier: votingState.userIdentifier,
       });
       
-      console.log('✅ Vote successfully submitted to backend');
+      console.log('✅ Dual votes successfully submitted to backend');
       
       // Update local state with backend response
       const newState: VotingState = {
         ...votingState,
+        userTeam: team1, // First selected team
         hasVoted: true,
-        votedFor: teamId,
+        ownTeamVote: true,
+        otherTeamVote: true,
+        votedFor: team2, // Second selected team
         votes: response.results,
       };
+      
+      console.log('🔄 Updating state after successful vote:', { 
+        hasVoted: newState.hasVoted,
+        userTeam: newState.userTeam,
+        votedFor: newState.votedFor 
+      });
       
       setVotingState(newState);
       saveVotingState(newState);
       
     } catch (error) {
-      console.error('❌ Error submitting vote:', error);
+      console.error('❌ Error submitting dual votes:', error);
       setError(handleApiError(error));
       
       // If it's a "already voted" error, update local state
@@ -141,6 +152,8 @@ export default function VotingApp() {
         const newState = {
           ...votingState,
           hasVoted: true,
+          ownTeamVote: true,
+          otherTeamVote: true,
         };
         setVotingState(newState);
         saveVotingState(newState);
@@ -150,13 +163,14 @@ export default function VotingApp() {
     }
   };
 
-  // Show loading state or wait for client hydration
-  if (isLoading || !isClient) {
+  // Show loading state or wait for client hydration or backend check
+  if (isLoading || !isClient || !votingState) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4 animate-bounce">🏺</div>
-          <div className="text-xl font-semibold text-gray-700">Loading...</div>
+          <div className="text-xl font-semibold text-gray-700 mb-2">Đang kiểm tra...</div>
+          <div className="text-sm text-gray-500">Kiểm tra trạng thái vote của bạn</div>
         </div>
       </div>
     );
@@ -168,32 +182,36 @@ export default function VotingApp() {
       <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center px-4">
         <div className="text-center text-red-600 max-w-md">
           <div className="text-6xl mb-4">❌</div>
-          <div className="text-xl font-semibold mb-2">Error loading voting data</div>
+          <div className="text-xl font-semibold mb-2">Vote rùi tính vote thêm chi zậy</div>
           <div className="text-sm text-red-500 bg-red-50 p-3 rounded-lg border border-red-200">
-            {error}
+            Coi chừng à
           </div>
         </div>
       </div>
     );
   }
 
-  // Show results if user has already voted
+  // Show results if user has completed voting
   if (votingState.hasVoted) {
+    console.log('🎉 User has voted - showing VotingResults', { 
+      hasVoted: votingState.hasVoted,
+      ownTeamVote: votingState.ownTeamVote,
+      otherTeamVote: votingState.otherTeamVote 
+    });
     return <VotingResults votingState={votingState} />;
   }
 
-  // Show voting interface if user has selected their team
-  if (votingState.userTeam) {
-    return (
-      <VotingInterface
-        userTeam={votingState.userTeam}
-        onVote={handleVote}
-        isSubmitting={isSubmitting}
-        error={error}
-      />
-    );
-  }
-
-  // Show team selection if user hasn't selected their team yet
-  return <TeamSelector onSelectTeam={handleSelectTeam} />;
+  // Show team selector for voting (only after backend check confirms user hasn't voted)
+  console.log('🗳️ User has not voted - showing TeamSelector', { 
+    hasVoted: votingState.hasVoted,
+    ownTeamVote: votingState.ownTeamVote,
+    otherTeamVote: votingState.otherTeamVote 
+  });
+  return (
+    <TeamSelector 
+      onSubmitVotes={handleSubmitVotes}
+      isSubmitting={isSubmitting}
+      error={error}
+    />
+  );
 }
