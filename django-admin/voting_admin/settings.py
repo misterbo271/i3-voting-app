@@ -44,9 +44,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -140,7 +140,8 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = True  # Temporarily allow all origins for debugging
+# For production, use specific origins. For debugging, you can temporarily set this to True
+CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default=False, cast=bool)
 
 # Additional CORS headers
 CORS_ALLOW_HEADERS = [
@@ -164,6 +165,9 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
+# Ensure preflight requests are handled properly
+CORS_PREFLIGHT_MAX_AGE = 86400
+
 # REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
@@ -180,4 +184,5 @@ REST_FRAMEWORK = {
 CSRF_TRUSTED_ORIGINS = [
     "https://i3-voting-app.vercel.app",
     "https://*.vercel.app",
+    "https://django-admin-iimee8isg-misterbo271s-projects.vercel.app",
 ]
