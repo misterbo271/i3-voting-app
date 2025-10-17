@@ -102,14 +102,14 @@ export default function TeamSelector({ onSubmitVotes, isSubmitting = false, erro
                 } ${isSubmitting ? 'opacity-30 cursor-not-allowed' : canSelect ? 'cursor-pointer' : 'cursor-not-allowed'}`}
               >
                 {isSelected && (
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
-                    <span className="text-white text-sm font-bold">✓</span>
+                  <div className="absolute -top-2 -right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
+                    <span className="text-white ml-2 mr-2 mt-1 mb-1 text-sm font-bold">✓</span>
                   </div>
                 )}
                 <div className="flex items-center justify-center space-x-3">
                   <span className="text-3xl">{team.emoji}</span>
                   <div className="text-left">
-                    <div className="text-sm opacity-90">
+                    <div className="text-lg text-white opacity-90">
                       {isSelected 
                         ? 'Nhấn để bỏ chọn' 
                         : canSelect 
@@ -133,7 +133,7 @@ export default function TeamSelector({ onSubmitVotes, isSubmitting = false, erro
             <motion.button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="w-full p-4 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-colors disabled:opacity-50 font-semibold text-lg"
+              className="w-full p-4 bg-primary-400 text-white rounded-xl hover:bg-pink-600 transition-colors disabled:opacity-50 font-semibold text-lg"
             >
               {isSubmitting ? (
                 <div className="flex items-center justify-center space-x-3">

@@ -35,12 +35,12 @@ export default function VotingResults({ votingState }: VotingResultsProps) {
           <p className="text-gray-600 mb-4">
             Bạn đã bình chọn cho 2 đội yêu thích của mình
           </p>
-          <div className="text-sm text-gray-500">
+          {/* <div className="text-sm text-gray-500">
             Kết quả được cập nhật theo thời gian thực
-          </div>
+          </div> */}
         </motion.div>
 
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3 }}
@@ -58,9 +58,9 @@ export default function VotingResults({ votingState }: VotingResultsProps) {
               {winningTeam.votes} votes
             </div>
           </div>
-        </motion.div>
+        </motion.div> */}
 
-        <div className="space-y-3">
+        {/* <div className="space-y-3">
           <h3 className="text-lg font-semibold text-gray-800 text-center mb-4">
             Kết quả (real time)
           </h3>
@@ -96,7 +96,7 @@ export default function VotingResults({ votingState }: VotingResultsProps) {
               </div>
             </motion.div>
           ))}
-        </div>
+        </div> */}
 
         <motion.div
           initial={{ opacity: 0 }}
