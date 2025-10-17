@@ -27,6 +27,9 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me')
 DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,192.168.20.52,*.railway.app,*.render.com,*.herokuapp.com,*.vercel.app').split(',')
+if DEBUG:
+    # Allow all hosts in development so LAN devices can access via IP
+    ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -188,4 +191,8 @@ CSRF_TRUSTED_ORIGINS = [
     "https://i3-voting-app.vercel.app",
     "https://*.vercel.app",
     "https://django-admin-iimee8isg-misterbo271s-projects.vercel.app",
+    # Local/LAN access for admin
+    "http://localhost:8001",
+    "http://127.0.0.1:8001",
+    "http://192.168.20.52:8001",
 ]

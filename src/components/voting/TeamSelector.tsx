@@ -135,7 +135,7 @@ export default function TeamSelector({ onSubmitVotes, isSubmitting = false, erro
                         : isSelected 
                         ? 'Nhấn để bỏ chọn' 
                         : canSelect 
-                        ? 'Nhấn để chọn' 
+                        ? `Nhấn để chọn ${team.name}` 
                         : 'Đã chọn đủ 2 đội'
                       }
                     </div>

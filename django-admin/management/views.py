@@ -95,13 +95,20 @@ class DashboardView(View):
             recent_logs = SystemLog.objects.order_by('-timestamp')[:10]
             
             # Get team performance data for charts
+            # Ensure all 4 teams are present and sort by votes desc so the first is the true leader
+            backend_results = stats.get('results', []) or []
+            name_to_result = {r.get('teamName'): r for r in backend_results}
+
             team_performance = []
-            for result in stats.get('results', []):
+            for team_code, team_display_name in Vote.TEAM_CHOICES:
+                r = name_to_result.get(team_display_name, {})
                 team_performance.append({
-                    'name': result['teamName'],
-                    'votes': result['votes'],
-                    'percentage': result['percentage']
+                    'name': team_display_name,
+                    'votes': int(r.get('votes', 0) or 0),
+                    'percentage': float(r.get('percentage', 0.0) or 0.0),
                 })
+
+            team_performance.sort(key=lambda t: t['votes'], reverse=True)
             
             context = {
                 'stats': stats,
