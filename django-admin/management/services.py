@@ -136,7 +136,9 @@ class VotingDataService:
                     user_team=self._map_team_name_to_id(vote_data.get('userTeam', '')),
                     voted_for=self._map_team_name_to_id(vote_data.get('votedFor', '')),
                     timestamp=vote_data.get('timestamp', timezone.now()),
+                    ip_address=vote_data.get('ipAddress'),
                     user_identifier=f"backend-{vote_data.get('id', '')[:8]}",  # Placeholder
+                    name=vote_data.get('name'),  # Include name field from backend
                     synced_with_backend=True
                 )
                 synced_count += 1
@@ -219,6 +221,15 @@ class VotingDataService:
     
     def _map_team_name_to_id(self, team_name: str) -> str:
         """Map team display name back to team ID"""
+        if not team_name:
+            return ''
+            
+        # If it's already a team ID, return as is
+        valid_team_ids = ['team-a', 'team-b', 'team-c', 'team-d']
+        if team_name in valid_team_ids:
+            return team_name
+            
+        # Map display names to team IDs
         team_mapping = {
             'Team 01': 'team-a',
             'Team 02': 'team-b',

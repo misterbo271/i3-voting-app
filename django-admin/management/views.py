@@ -8,6 +8,7 @@ from django.views import View
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 import json
 import logging
 
@@ -33,10 +34,62 @@ class DashboardView(View):
     def get(self, request):
         try:
             data_service = VotingDataService()
+            api_service = VotingAPIService()
             stats = data_service.get_dashboard_stats()
-            
-            # Get recent votes
-            recent_votes = Vote.objects.select_related().order_by('-timestamp')[:10]
+
+            # Get all votes from backend admin endpoint and aggregate by voter name
+            backend_votes_response = api_service.get_all_votes()
+            backend_votes = backend_votes_response.get('votes', [])
+
+            # Aggregate votes by voter name (combine votedFor for the same name)
+            name_to_votes = {}
+            for v in backend_votes:
+                # Normalize fields from backend
+                voter_name = (v.get('name') or '').strip()
+                if not voter_name:
+                    voter_name = 'Anonymous'
+
+                voted_for_display = v.get('votedFor') or ''  # Already a display name like "Team 01"
+                user_team_display = v.get('userTeam') or ''   # Display name if present
+                ip_addr = v.get('ipAddress')
+                ts = parse_datetime(v.get('timestamp')) if v.get('timestamp') else None
+
+                if voter_name not in name_to_votes:
+                    name_to_votes[voter_name] = {
+                        'name': voter_name,
+                        'team_display_name': user_team_display,
+                        'voted_for_set': set(),
+                        'timestamp': ts,
+                        'ip_address': ip_addr,
+                        'user_identifier': '',
+                    }
+
+                entry = name_to_votes[voter_name]
+                if voted_for_display:
+                    entry['voted_for_set'].add(voted_for_display)
+                # Prefer non-empty team name; keep latest timestamp/ip
+                if user_team_display and not entry['team_display_name']:
+                    entry['team_display_name'] = user_team_display
+                if ts and (entry['timestamp'] is None or ts > entry['timestamp']):
+                    entry['timestamp'] = ts
+                    entry['ip_address'] = ip_addr
+
+            # Convert to list for template with combined voted_for
+            recent_votes = []
+            for agg in name_to_votes.values():
+                combined = dict(agg)
+                combined['voted_for_display_name'] = ', '.join(sorted(list(agg['voted_for_set']))) if agg['voted_for_set'] else ''
+                # Remove helper set
+                combined.pop('voted_for_set', None)
+                recent_votes.append(combined)
+
+            # Sort by latest timestamp desc and limit
+            recent_votes.sort(key=lambda x: x.get('timestamp') or timezone.make_aware(timezone.datetime.min), reverse=True)
+            recent_votes = recent_votes[:10]
+
+            # Calculate named vs anonymous counts
+            named_voters_count = sum(1 for rv in recent_votes if rv.get('name') and rv.get('name').strip() and rv.get('name') != 'Anonymous')
+            anonymous_voters_count = sum(1 for rv in recent_votes if not rv.get('name') or rv.get('name') == 'Anonymous')
             
             # Get recent logs
             recent_logs = SystemLog.objects.order_by('-timestamp')[:10]
@@ -55,6 +108,8 @@ class DashboardView(View):
                 'recent_votes': recent_votes,
                 'recent_logs': recent_logs,
                 'team_performance': team_performance,
+                'named_voters_count': named_voters_count,
+                'anonymous_voters_count': anonymous_voters_count,
                 'page_title': 'Dashboard'
             }
             
@@ -70,6 +125,8 @@ class DashboardView(View):
                 'recent_votes': [],
                 'recent_logs': [],
                 'team_performance': [],
+                'named_voters_count': 0,
+                'anonymous_voters_count': 0,
                 'page_title': 'Dashboard'
             }
             return render(request, 'management/dashboard.html', context)

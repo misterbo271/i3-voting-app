@@ -105,7 +105,7 @@ export default function VotingApp() {
     initializeApp();
   }, [isClient]);
 
-  const handleSubmitVotes = async (team1: string, team2: string) => {
+  const handleSubmitVotes = async (team1: string, team2: string, userName: string) => {
     if (!votingState || votingState.hasVoted || isSubmitting) return;
     
     setIsSubmitting(true);
@@ -119,6 +119,7 @@ export default function VotingApp() {
         team1: team1,
         team2: team2,
         userIdentifier: votingState.userIdentifier,
+        name: userName,
       });
       
       console.log('✅ Dual votes successfully submitted to backend');
@@ -181,7 +182,7 @@ export default function VotingApp() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center px-4">
         <div className="text-center text-red-600 max-w-md">
-          <img src="/images/noi.gif" alt="Error" className="w-12 h-12 mb-4 mx-auto" />
+          <img src="/images/meme.jpg" alt="Error" className="w-12 h-12 mb-4 mx-auto" />
           <div className="text-xl font-semibold mb-2">Vote rùi tính vote thêm chi zậy</div>
           <div className="text-sm text-red-500 bg-red-50 p-3 rounded-lg border border-red-200">
             Coi chừng à

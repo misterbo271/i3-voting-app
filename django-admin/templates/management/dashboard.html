@@ -114,7 +114,7 @@
 <!-- Charts Row -->
 <div class="row mb-4">
     <!-- Voting Results Chart -->
-    <div class="col-xl-8 col-lg-7">
+    <div class="col-xl-8 col-lg-6">
         <div class="card shadow mb-4">
             <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                 <h6 class="m-0 font-weight-bold text-primary">
@@ -122,7 +122,7 @@
                 </h6>
             </div>
             <div class="card-body">
-                <div class="chart-area">
+                <div class="chart-area" style="max-width: 100%; height: 300px;">
                     <canvas id="votingChart" width="400" height="200"></canvas>
                 </div>
             </div>
@@ -130,7 +130,7 @@
     </div>
 
     <!-- Team Performance -->
-    <div class="col-xl-4 col-lg-5">
+    <div class="col-xl-4 col-lg-4">
         <div class="card shadow mb-4">
             <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                 <h6 class="m-0 font-weight-bold text-primary">
@@ -156,20 +156,20 @@
                     {% for team in team_performance %}
                         {% if forloop.first %}
                             <!-- Winner/Leading Team -->
-                            <div class="d-flex align-items-center mb-4 p-3 bg-gradient-primary rounded text-white">
+                            <div class="d-flex align-items-center mb-4 p-3 rounded" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%); box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);">
                                 <div class="me-3">
-                                    <div class="icon-circle bg-warning">
-                                        <i class="fas fa-crown text-white"></i>
+                                    <div class="icon-circle" style="background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border: 2px solid rgba(255, 255, 255, 0.3);">
+                                        <i class="fas fa-crown" style="color: #8B4513; font-size: 1.2em;"></i>
                                     </div>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <div class="small opacity-75">🏆 Leading Team</div>
-                                    <div class="font-weight-bold h5 mb-1">{{ team.name }}</div>
-                                    <div class="small">{{ team.votes }} votes ({{ team.percentage|floatformat:1 }}%)</div>
+                                    <div class="small" style="color: #8B4513; font-weight: 600;">🏆 Leading Team</div>
+                                    <div class="font-weight-bold h5 mb-1" style="color: #2C1810; text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);">{{ team.name }}</div>
+                                    <div class="small" style="color: #5D4E37; font-weight: 500;">{{ team.votes }} votes ({{ team.percentage|floatformat:1 }}%)</div>
                                 </div>
                                 <div class="text-right">
-                                    <div class="h4 mb-0">{{ forloop.counter }}</div>
-                                    <div class="small opacity-75">RANK</div>
+                                    <div class="h4 mb-0" style="color: #8B4513; font-weight: bold; text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);">{{ forloop.counter }}</div>
+                                    <div class="small" style="color: #5D4E37; font-weight: 600;">RANK</div>
                                 </div>
                             </div>
                         {% else %}
@@ -257,6 +257,147 @@
     </div>
 </div>
 
+<!-- Names and Votes Table -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-users me-2"></i>Voters and Their Choices
+                </h6>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="refreshVotersTable()">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                    </button>
+                    <a href="{% url 'management:votes_list' %}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-list me-1"></i>View All
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if recent_votes %}
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="voters-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">
+                                        <i class="fas fa-user me-1"></i>Voter Name
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-users me-1"></i>User Team
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-vote-yea me-1"></i>Voted For
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-clock me-1"></i>Time
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-network-wired me-1"></i>IP Address
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for vote in recent_votes %}
+                                    <tr>
+                                        <td>
+                                            {% if vote.name %}
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-sm me-2">
+                                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                                            <span class="small font-weight-bold">{{ vote.name|first|upper }}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <strong class="text-dark">{{ vote.name }}</strong>
+                                                        <div class="small text-muted">{{ vote.user_identifier|truncatechars:12 }}</div>
+                                                    </div>
+                                                </div>
+                                            {% else %}
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-sm me-2">
+                                                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                                            <i class="fas fa-user-secret"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <span class="text-muted">Anonymous</span>
+                                                        <div class="small text-muted">{{ vote.user_identifier|truncatechars:12 }}</div>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info fs-6">{{ vote.team_display_name }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success fs-6">{{ vote.voted_for_display_name }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="text-muted small">
+                                                <i class="fas fa-clock me-1"></i>{{ vote.timestamp|timesince }} ago
+                                            </div>
+                                            <div class="text-muted" style="font-size: 0.75rem;">
+                                                {{ vote.timestamp|date:"M d, H:i" }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if vote.ip_address %}
+                                                <code class="small">{{ vote.ip_address }}</code>
+                                            {% else %}
+                                                <span class="text-muted small">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Summary Stats -->
+                    <div class="row mt-3 pt-3 border-top">
+                        <div class="col-md-3 text-center">
+                            <div class="small text-muted">Total Shown</div>
+                            <div class="h5 mb-0 text-primary">{{ recent_votes|length }}</div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="small text-muted">Named Voters</div>
+                            <div class="h5 mb-0 text-success">
+                                {{ named_voters_count|default:0 }}
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="small text-muted">Anonymous</div>
+                            <div class="h5 mb-0 text-warning">
+                                {{ anonymous_voters_count|default:0 }}
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="small text-muted">Latest Vote</div>
+                            <div class="h6 mb-0 text-info">
+                                {% if recent_votes %}
+                                    {{ recent_votes.0.timestamp|timesince }} ago
+                                {% else %}
+                                    Never
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-vote-yea fa-4x mb-3 text-gray-300"></i>
+                        <h5 class="text-gray-500">No Votes Yet</h5>
+                        <p class="mb-3">The voters table will appear here once people start voting</p>
+                        <button class="btn btn-outline-primary" onclick="refreshVotersTable()">
+                            <i class="fas fa-sync me-1"></i>Check for Votes
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Recent Activity Row -->
 <div class="row">
     <!-- Recent Votes -->
@@ -276,6 +417,7 @@
                         <table class="table table-sm">
                             <thead>
                                 <tr>
+                                    <th>Name</th>
                                     <th>Team</th>
                                     <th>Voted For</th>
                                     <th>Time</th>
@@ -284,6 +426,13 @@
                             <tbody>
                                 {% for vote in recent_votes %}
                                     <tr>
+                                        <td>
+                                            {% if vote.name %}
+                                                <strong class="text-primary">{{ vote.name }}</strong>
+                                            {% else %}
+                                                <span class="text-muted">Anonymous</span>
+                                            {% endif %}
+                                        </td>
                                         <td>
                                             <span class="badge bg-info">{{ vote.team_display_name }}</span>
                                         </td>
@@ -517,6 +666,17 @@ function syncData() {
         btn.disabled = false;
     });
 }
+
+function refreshVotersTable() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Refreshing...';
+    btn.disabled = true;
+    
+    // Refresh the entire dashboard to get updated voter data
+    location.reload();
+}
+
 
 function showAlert(type, message) {
     const alertDiv = document.createElement('div');

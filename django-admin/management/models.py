@@ -18,6 +18,7 @@ class Vote(models.Model):
     timestamp = models.DateTimeField(default=timezone.now)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_identifier = models.CharField(max_length=100, help_text="User identifier from frontend")
+    name = models.CharField(max_length=100, null=True, blank=True, help_text="Voter's name")
     
     # Local tracking fields
     synced_with_backend = models.BooleanField(default=True)
@@ -30,7 +31,8 @@ class Vote(models.Model):
         verbose_name_plural = 'Votes'
     
     def __str__(self):
-        return f"{self.get_user_team_display()} voted for {self.get_voted_for_display()}"
+        name_part = f"{self.name} - " if self.name else ""
+        return f"{name_part}{self.get_user_team_display()} voted for {self.get_voted_for_display()}"
     
     @property
     def team_display_name(self):

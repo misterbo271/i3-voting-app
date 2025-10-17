@@ -7,16 +7,17 @@ import Image from 'next/image';
 import { Team, TEAMS } from '@/lib/voting';
 
 interface TeamSelectorProps {
-  onSubmitVotes: (team1: string, team2: string) => void;
+  onSubmitVotes: (team1: string, team2: string, userName: string) => void;
   isSubmitting?: boolean;
   error?: string | null;
 }
 
 export default function TeamSelector({ onSubmitVotes, isSubmitting = false, error }: TeamSelectorProps) {
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
+  const [userName, setUserName] = useState<string>('');
 
   const handleTeamClick = (teamId: string) => {
-    if (isSubmitting) return;
+    if (isSubmitting || !userName.trim()) return;
     
     if (selectedTeams.includes(teamId)) {
       // Deselect team
@@ -28,12 +29,13 @@ export default function TeamSelector({ onSubmitVotes, isSubmitting = false, erro
   };
 
   const handleSubmit = () => {
-    if (selectedTeams.length === 2) {
-      onSubmitVotes(selectedTeams[0], selectedTeams[1]);
+    if (selectedTeams.length === 2 && userName.trim()) {
+      onSubmitVotes(selectedTeams[0], selectedTeams[1], userName.trim());
     }
   };
 
-  const canSubmit = selectedTeams.length === 2;
+  const canSubmit = selectedTeams.length === 2 && userName.trim();
+  const hasName = userName.trim();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 px-4 py-8">
@@ -59,6 +61,24 @@ export default function TeamSelector({ onSubmitVotes, isSubmitting = false, erro
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
            đẹp nhất
           </h1>
+          
+          {/* Name Input Section */}
+          <div className="mb-6">
+            <input
+              type="text"
+              placeholder="Tên của bạn..."
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+              disabled={isSubmitting}
+              className="w-full p-3 text-center text-lg border-2 border-gray-300 rounded-xl focus:border-pink-400 focus:outline-none transition-colors bg-white/80 backdrop-blur-sm"
+            />
+            {!userName.trim() && (
+              <p className="text-sm text-gray-500 mt-2 text-center">
+                Vui lòng nhập tên để tiếp tục bình chọn
+              </p>
+            )}
+          </div>
+          
           <p className="text-xl text-gray-600 mb-4">
             Chọn 2 đội bạn thích nhất ({selectedTeams.length}/2)
           </p>
@@ -81,7 +101,7 @@ export default function TeamSelector({ onSubmitVotes, isSubmitting = false, erro
           {TEAMS.map((team, index) => {
             const isSelected = selectedTeams.includes(team.id);
             const selectionOrder = selectedTeams.indexOf(team.id) + 1;
-            const canSelect = selectedTeams.length < 2 || isSelected;
+            const canSelect = hasName && (selectedTeams.length < 2 || isSelected);
             
             return (
               <motion.button
@@ -110,7 +130,9 @@ export default function TeamSelector({ onSubmitVotes, isSubmitting = false, erro
                   <span className="text-3xl">{team.emoji}</span>
                   <div className="text-left">
                     <div className="text-lg text-white opacity-90">
-                      {isSelected 
+                      {!hasName
+                        ? 'Nhập tên để chọn'
+                        : isSelected 
                         ? 'Nhấn để bỏ chọn' 
                         : canSelect 
                         ? 'Nhấn để chọn' 

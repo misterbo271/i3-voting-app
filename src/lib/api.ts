@@ -14,6 +14,7 @@ export interface DualVoteRequest {
   team1: string;
   team2: string;
   userIdentifier: string;
+  name: string;
 }
 
 export interface SimpleVoteRequest {
