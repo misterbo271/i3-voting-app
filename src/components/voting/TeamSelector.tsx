@@ -54,9 +54,12 @@ export default function TeamSelector({ onSubmitVotes, isSubmitting = false, erro
           </div>
           
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Bình chọn bình hoa đẹp nhất
+            Bình chọn bình hoa
           </h1>
-          <p className="text-gray-600 mb-4">
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+           đẹp nhất
+          </h1>
+          <p className="text-xl text-gray-600 mb-4">
             Chọn 2 đội bạn thích nhất ({selectedTeams.length}/2)
           </p>
           
@@ -65,7 +68,7 @@ export default function TeamSelector({ onSubmitVotes, isSubmitting = false, erro
               {selectedTeams.map((teamId, index) => {
                 const team = TEAMS.find(t => t.id === teamId);
                 return (
-                  <div key={teamId} className={`px-3 py-1 rounded-full text-white text-sm font-medium ${team?.color}`}>
+                  <div key={teamId} className={`px-3 py-1 rounded-full text-white text-sm font-medium shadow-lg backdrop-blur-sm border border-white border-opacity-20 ${team?.color} opacity-90`}>
                     {index + 1}. {team?.emoji} {team?.name}
                   </div>
                 );
@@ -90,25 +93,22 @@ export default function TeamSelector({ onSubmitVotes, isSubmitting = false, erro
                 whileTap={{ scale: isSubmitting || !canSelect ? 1 : 0.98 }}
                 onClick={() => handleTeamClick(team.id)}
                 disabled={isSubmitting || (!canSelect && !isSelected)}
-                className={`w-full p-6 rounded-2xl shadow-lg border-2 transition-all duration-200 ${
+                className={`relative w-full p-6 rounded-2xl shadow-lg border-2 transition-all duration-300 ${
                   isSelected 
-                    ? `${team.color} border-white border-4 text-white` 
+                    ? `${team.color} border-white border-4 text-white opacity-30 shadow-xl transform scale-105` 
                     : canSelect
-                    ? `${team.color} border-transparent hover:border-white text-white`
-                    : `${team.color} border-transparent text-white opacity-50`
-                } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : canSelect ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                    ? `${team.color} border-transparent hover:border-white text-white hover:opacity-90 hover:shadow-xl hover:transform hover:scale-102`
+                    : `${team.color} border-transparent text-white opacity-40`
+                } ${isSubmitting ? 'opacity-30 cursor-not-allowed' : canSelect ? 'cursor-pointer' : 'cursor-not-allowed'}`}
               >
+                {isSelected && (
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
+                    <span className="text-white text-sm font-bold">✓</span>
+                  </div>
+                )}
                 <div className="flex items-center justify-center space-x-3">
                   <span className="text-3xl">{team.emoji}</span>
                   <div className="text-left">
-                    <div className="text-xl font-semibold flex items-center space-x-2">
-                      <span>{team.name}</span>
-                      {isSelected && (
-                        <span className="text-sm bg-white bg-opacity-30 px-2 py-1 rounded-full">
-                          {selectionOrder}. ✓ Đã chọn
-                        </span>
-                      )}
-                    </div>
                     <div className="text-sm opacity-90">
                       {isSelected 
                         ? 'Nhấn để bỏ chọn' 
